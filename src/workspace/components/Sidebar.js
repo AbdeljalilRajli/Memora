@@ -17,6 +17,27 @@ export function Sidebar() {
   const [sort, setSort] = useState('newest');
   const [query, setQuery] = useState('');
 
+  const primaryGradientSx = useMemo(
+    () => ({
+      fontWeight: 800,
+      borderRadius: 2,
+      whiteSpace: 'nowrap',
+      textTransform: 'none',
+      background: 'linear-gradient(135deg, rgba(249, 110, 91, 1), rgba(255, 152, 106, 1))',
+      boxShadow: '0 12px 26px rgba(249, 110, 91, 0.22)',
+      '&:hover': {
+        background: 'linear-gradient(135deg, rgba(249, 110, 91, 1), rgba(255, 152, 106, 1))',
+        boxShadow: '0 16px 34px rgba(249, 110, 91, 0.30)',
+        transform: 'translateY(-1px)',
+      },
+      '&:active': {
+        transform: 'translateY(0)',
+        boxShadow: '0 10px 22px rgba(249, 110, 91, 0.22)',
+      },
+    }),
+    []
+  );
+
   const sorted = useMemo(() => {
     const copy = notes.filter((n) => !n.isDraft);
     copy.sort((a, b) => {
@@ -47,7 +68,7 @@ export function Sidebar() {
               <MenuItem value="oldest">Oldest</MenuItem>
             </Select>
           </FormControl>
-          <Button variant="contained" onClick={() => createNote()} sx={{ fontWeight: 800, borderRadius: 2, whiteSpace: 'nowrap' }}>
+          <Button variant="contained" onClick={() => createNote()} sx={primaryGradientSx}>
             New
           </Button>
         </Stack>

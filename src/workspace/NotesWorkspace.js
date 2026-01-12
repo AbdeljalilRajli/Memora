@@ -81,6 +81,26 @@ function NotesWorkspaceInner({ userEmail, onLogout, loggingOut, supabaseHost }) 
   const [editorOpen, setEditorOpen] = useState(false);
   const [lastSaveError, setLastSaveError] = useState('');
 
+  const primaryGradientSx = useMemo(
+    () => ({
+      fontWeight: 900,
+      borderRadius: 3,
+      textTransform: 'none',
+      background: 'linear-gradient(135deg, rgba(249, 110, 91, 1), rgba(255, 152, 106, 1))',
+      boxShadow: '0 12px 26px rgba(249, 110, 91, 0.22)',
+      '&:hover': {
+        background: 'linear-gradient(135deg, rgba(249, 110, 91, 1), rgba(255, 152, 106, 1))',
+        boxShadow: '0 16px 34px rgba(249, 110, 91, 0.30)',
+        transform: 'translateY(-1px)',
+      },
+      '&:active': {
+        transform: 'translateY(0)',
+        boxShadow: '0 10px 22px rgba(249, 110, 91, 0.22)',
+      },
+    }),
+    []
+  );
+
   const note = getActiveNote();
 
   const [exportAnchorEl, setExportAnchorEl] = useState(null);
@@ -185,7 +205,7 @@ function NotesWorkspaceInner({ userEmail, onLogout, loggingOut, supabaseHost }) 
                       });
                   }}
                   disabled={!note || !canSave || saveStatus === 'saving'}
-                  sx={{ fontWeight: 900, borderRadius: 3, textTransform: 'none' }}
+                  sx={primaryGradientSx}
                 >
                   Save
                 </Button>

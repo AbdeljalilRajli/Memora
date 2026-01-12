@@ -55,6 +55,27 @@ export function DashboardPane({ onOpenEditor }) {
   const [query, setQuery] = useState('');
   const [folderFilter, setFolderFilter] = useState({ type: 'all' });
 
+  const primaryGradientSx = useMemo(
+    () => ({
+      fontWeight: 900,
+      borderRadius: 3,
+      whiteSpace: 'nowrap',
+      textTransform: 'none',
+      background: 'linear-gradient(135deg, rgba(249, 110, 91, 1), rgba(255, 152, 106, 1))',
+      boxShadow: '0 12px 26px rgba(249, 110, 91, 0.22)',
+      '&:hover': {
+        background: 'linear-gradient(135deg, rgba(249, 110, 91, 1), rgba(255, 152, 106, 1))',
+        boxShadow: '0 16px 34px rgba(249, 110, 91, 0.30)',
+        transform: 'translateY(-1px)',
+      },
+      '&:active': {
+        transform: 'translateY(0)',
+        boxShadow: '0 10px 22px rgba(249, 110, 91, 0.22)',
+      },
+    }),
+    []
+  );
+
   const [createOpen, setCreateOpen] = useState(false);
   const [folderName, setFolderName] = useState('');
   const [folderColor, setFolderColor] = useState('blue');
@@ -216,7 +237,7 @@ export function DashboardPane({ onOpenEditor }) {
             />
           </div>
 
-          <Button variant="contained" onClick={onNewNote} sx={{ fontWeight: 900, borderRadius: 3, whiteSpace: 'nowrap' }}>
+          <Button variant="contained" onClick={onNewNote} sx={primaryGradientSx}>
             New note
           </Button>
         </div>
@@ -346,7 +367,7 @@ export function DashboardPane({ onOpenEditor }) {
           <Button variant="outlined" onClick={() => setEditOpen(false)}>
             Cancel
           </Button>
-          <Button variant="contained" onClick={onApplyEditFolder} sx={{ fontWeight: 900 }}>
+          <Button variant="contained" onClick={onApplyEditFolder} sx={primaryGradientSx}>
             Save
           </Button>
         </DialogActions>
@@ -378,7 +399,7 @@ export function DashboardPane({ onOpenEditor }) {
           <Button variant="outlined" onClick={() => setCreateOpen(false)}>
             Cancel
           </Button>
-          <Button variant="contained" onClick={onCreateFolder} sx={{ fontWeight: 900 }}>
+          <Button variant="contained" onClick={onCreateFolder} sx={primaryGradientSx}>
             Create
           </Button>
         </DialogActions>
@@ -395,7 +416,7 @@ export function DashboardPane({ onOpenEditor }) {
             <div className="DashboardEmptyTitle">No notes found</div>
             <div className="DashboardEmptyDesc">Try a different search or create a new note.</div>
             <div className="DashboardEmptyActions">
-              <Button variant="contained" onClick={onNewNote} sx={{ fontWeight: 900, borderRadius: 3 }}>
+              <Button variant="contained" onClick={onNewNote} sx={primaryGradientSx}>
                 Create note
               </Button>
             </div>

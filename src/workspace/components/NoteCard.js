@@ -99,6 +99,8 @@ export function NoteCard({ note, highlightQuery = '', selected = false }) {
   const { push } = useToast();
   const cardRef = useRef(null);
 
+  const userId = user?.id || null;
+
   const [exportOpen, setExportOpen] = useState(false);
   const [shareLoading, setShareLoading] = useState(false);
   const [exportLoading, setExportLoading] = useState(false);
@@ -195,14 +197,14 @@ export function NoteCard({ note, highlightQuery = '', selected = false }) {
     async (e) => {
       e.preventDefault();
       e.stopPropagation();
-      if (!user?.id) {
+      if (!userId) {
         push('Sign in to share');
         return;
       }
 
       setShareLoading(true);
       try {
-        const row = await enableShareForNote({ userId: user.id, noteId: note.id });
+        const row = await enableShareForNote({ userId, noteId: note.id });
         const url = `${window.location.origin}/share/${row.share_id}`;
         await copyToClipboardText(url);
         push('Link copied');
@@ -217,7 +219,7 @@ export function NoteCard({ note, highlightQuery = '', selected = false }) {
         setShareLoading(false);
       }
     },
-    [note.id, push, user.id]
+    [note.id, push, userId]
   );
 
   const withEditorContent = async (e, fn) => {
@@ -249,12 +251,16 @@ export function NoteCard({ note, highlightQuery = '', selected = false }) {
           height: '100%',
           borderRadius: 3,
           border: selected ? '1px solid rgba(255,183,0,0.65)' : '1px solid rgba(30,30,30,0.12)',
-          boxShadow: 'none',
+          boxShadow: selected ? '0 18px 50px rgba(15, 23, 42, 0.10)' : '0 14px 34px rgba(15, 23, 42, 0.08)',
           overflow: 'hidden',
           transition: 'transform 140ms ease, border-color 140ms ease, background-color 140ms ease',
           '&:hover': {
             transform: 'translateY(-1px)',
             borderColor: selected ? 'rgba(255,183,0,0.85)' : 'rgba(30,30,30,0.18)',
+            boxShadow: selected ? '0 20px 55px rgba(15, 23, 42, 0.12)' : '0 20px 55px rgba(15, 23, 42, 0.12)',
+          },
+          '&:active': {
+            transform: 'translateY(0)',
           },
         }}
       >
