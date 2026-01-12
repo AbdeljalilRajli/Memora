@@ -1,13 +1,14 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 export function TopNav({ userEmail, onLogout, loggingOut }) {
   return (
     <header className="TopNav">
       <div className="TopNavLeft">
-        <div className="Brand">
+        <Link to="/" className="Brand BrandLink" aria-label="Back to home">
           <div className="BrandMark">L</div>
           <div className="BrandName">Listem Notes</div>
-        </div>
+        </Link>
       </div>
 
       <div className="TopNavRight">

@@ -32,6 +32,9 @@ export default function SignupPage() {
   return (
     <div className="AuthContainer">
       <div className="AuthCard">
+        <Link className="AuthHomeLink" to="/">
+          ← Back to home
+        </Link>
         <div className="AuthHeader">
           <div className="AuthTitle">Create your account</div>
           <div className="AuthSubtitle">Start taking Notion-style notes</div>

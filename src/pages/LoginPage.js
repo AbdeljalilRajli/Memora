@@ -48,6 +48,9 @@ export default function LoginPage() {
   return (
     <div className="AuthContainer">
       <div className="AuthCard">
+        <Link className="AuthHomeLink" to="/">
+          ← Back to home
+        </Link>
         <div className="AuthHeader">
           <div className="AuthTitle">Listem Notes</div>
           <div className="AuthSubtitle">Sign in to your workspace</div>

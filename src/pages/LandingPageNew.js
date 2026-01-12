@@ -723,14 +723,14 @@ export default function LandingPageNew() {
   );
 
   return (
-    <div className="min-h-screen" style={{ background: 'var(--lp-bg)', color: 'var(--lp-text)' }}>
+    <div className="LandingPageNew min-h-screen" style={{ background: 'var(--lp-bg-2)', color: 'var(--lp-text)' }}>
       <div
         className="pointer-events-none fixed inset-0 -z-10"
         aria-hidden="true"
         style={{
           background:
             'radial-gradient(1100px 700px at 18% 0%, rgb(var(--lp-accent-secondary-rgb) / 0.16), transparent 62%), radial-gradient(1000px 680px at 82% 12%, rgb(var(--lp-accent-primary-rgb) / 0.14), transparent 60%), radial-gradient(900px 650px at 55% 92%, rgb(var(--lp-accent-tertiary-rgb) / 0.12), transparent 62%)',
-          opacity: 1,
+          opacity: 0.52,
         }}
       />
 
@@ -795,7 +795,7 @@ export default function LandingPageNew() {
       </header>
 
       <main>
-        <Section id="top" className="relative pt-20" style={{ background: 'linear-gradient(180deg, var(--lp-bg-1), var(--lp-bg))' }}>
+        <Section id="top" className="relative pt-20" style={{ background: 'linear-gradient(180deg, var(--lp-bg), var(--lp-bg-2))' }}>
           <div ref={heroRef} className="grid items-center gap-10 pb-16 pt-10 lg:grid-cols-2 lg:pb-24">
             <motion.div variants={heroContainer} initial={reduceMotion ? false : 'hidden'} animate="show">
               <motion.div
@@ -941,7 +941,7 @@ export default function LandingPageNew() {
           </div>
         </Section>
 
-        <Section className="pb-10" style={{ background: 'var(--lp-bg)' }}>
+        <Section className="pb-10" style={{ background: 'var(--lp-bg-2)' }}>
           <FadeIn>
             <div className="mx-auto grid max-w-6xl gap-3 sm:grid-cols-3">
               {[{ k: '2 min', t: 'Setup', d: 'Start fast' }, { k: 'PDF/MD/TXT', t: 'Export', d: 'Portable notes' }, { k: 'Links', t: 'Sharing', d: 'Send when needed' }].map(
@@ -967,7 +967,7 @@ export default function LandingPageNew() {
           </FadeIn>
         </Section>
 
-        <Section id="features" className="py-16 sm:py-24" style={{ background: 'linear-gradient(180deg, var(--lp-bg), var(--lp-bg-2))' }}>
+        <Section id="features" className="py-16 sm:py-24" style={{ background: 'var(--lp-bg-2)' }}>
           <FadeIn>
             <div className="max-w-2xl">
               <div className="text-[11px] font-extrabold uppercase tracking-[0.24em]" style={{ color: 'var(--lp-text-muted)' }}>
@@ -979,35 +979,50 @@ export default function LandingPageNew() {
             </div>
           </FadeIn>
 
-          <div className="mt-10 grid gap-10">
-            {features.map((f, idx) => (
-              <FadeIn key={f.title} delay={idx * 0.04}>
-                <div className="grid items-center gap-8 lg:grid-cols-2">
-                  <div className={f.reverse ? 'order-2 lg:order-2' : 'order-2 lg:order-1'}>
-                    <motion.div
-                      whileHover={reduceMotion ? undefined : { y: -2 }}
-                      transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
-                      className="relative"
-                    >
-                      <div
-                        className="pointer-events-none absolute -inset-10 rounded-[36px]"
-                        aria-hidden="true"
-                        style={{
-                          background:
-                            'radial-gradient(closest-side at 35% 35%, rgb(var(--lp-accent-primary-rgb) / 0.22), transparent 70%), radial-gradient(closest-side at 70% 55%, rgb(var(--lp-accent-secondary-rgb) / 0.16), transparent 72%), radial-gradient(closest-side at 52% 85%, rgb(var(--lp-accent-tertiary-rgb) / 0.12), transparent 74%)',
-                          filter: 'blur(18px)',
-                          opacity: 0.75,
-                        }}
-                      />
-                      {f.visual}
-                    </motion.div>
-                  </div>
+          <div className="mt-10 grid gap-6 lg:grid-cols-12">
+            <FadeIn className="lg:col-span-7">
+              <div
+                className="relative overflow-hidden rounded-[28px] border p-6 sm:p-8"
+                style={{
+                  borderColor: 'var(--lp-border)',
+                  background:
+                    'radial-gradient(940px 560px at 18% 18%, rgb(var(--lp-accent-primary-rgb) / 0.18), transparent 62%), radial-gradient(900px 560px at 82% 10%, rgb(var(--lp-accent-secondary-rgb) / 0.14), transparent 62%), var(--lp-surface-tint)',
+                  boxShadow: 'var(--lp-shadow)',
+                }}
+              >
+                <div className="text-[11px] font-extrabold uppercase tracking-[0.24em]" style={{ color: 'var(--lp-text-muted)' }}>
+                  Preview
+                </div>
+                <div className="mt-2 text-xl font-black tracking-tight" style={{ letterSpacing: '-0.02em' }}>
+                  A calm dashboard that stays out of your way.
+                </div>
+                <div className="mt-3 text-sm font-bold leading-relaxed" style={{ color: 'var(--lp-text-secondary)' }}>
+                  Organized notes, quick actions, and a writing-first flow — built for everyday use.
+                </div>
 
-                  <div className={f.reverse ? 'order-1 lg:order-1' : 'order-1 lg:order-2'}>
+                <div className="mt-6">
+                  <MockDashboard compact />
+                </div>
+              </div>
+            </FadeIn>
+
+            <div className="grid gap-4 sm:grid-cols-2 lg:col-span-5 lg:grid-cols-1">
+              {features.map((f, idx) => (
+                <FadeIn key={f.title} delay={idx * 0.03}>
+                  <motion.div
+                    whileHover={reduceMotion ? undefined : { y: -2 }}
+                    transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+                    className="rounded-[22px] border p-5"
+                    style={{
+                      borderColor: 'var(--lp-border)',
+                      background: 'var(--lp-surface-strong)',
+                      boxShadow: 'var(--lp-shadow)',
+                    }}
+                  >
                     <div className="flex items-start gap-4">
                       <FeatureIcon>{f.icon}</FeatureIcon>
                       <div>
-                        <div className="text-lg font-black tracking-tight" style={{ letterSpacing: '-0.02em' }}>
+                        <div className="text-base font-black tracking-tight" style={{ letterSpacing: '-0.02em' }}>
                           {f.title}
                         </div>
                         <div className="mt-1 text-sm leading-relaxed" style={{ color: 'var(--lp-text-secondary)' }}>
@@ -1015,14 +1030,14 @@ export default function LandingPageNew() {
                         </div>
                       </div>
                     </div>
-                  </div>
-                </div>
-              </FadeIn>
-            ))}
+                  </motion.div>
+                </FadeIn>
+              ))}
+            </div>
           </div>
         </Section>
 
-        <Section id="how" className="py-16 sm:py-24" style={{ background: 'linear-gradient(180deg, var(--lp-bg-2), var(--lp-bg))' }}>
+        <Section id="how" className="py-16 sm:py-24" style={{ background: 'var(--lp-bg-1)' }}>
           <FadeIn>
             <div className="max-w-2xl">
               <div className="text-[11px] font-extrabold uppercase tracking-[0.24em]" style={{ color: 'var(--lp-text-muted)' }}>
@@ -1061,14 +1076,14 @@ export default function LandingPageNew() {
           </div>
         </Section>
 
-        <Section id="showcase" className="py-16 sm:py-24" style={{ background: 'linear-gradient(180deg, var(--lp-bg), var(--lp-bg-1))' }}>
+        <Section id="showcase" className="py-16 sm:py-24" style={{ background: 'var(--lp-bg-2)' }}>
           <FadeIn>
             <div
               className="relative overflow-hidden rounded-[28px] border p-6 sm:p-10"
               style={{
                 borderColor: 'var(--lp-border)',
                 background:
-                  'radial-gradient(960px 580px at 18% 18%, rgb(var(--lp-accent-primary-rgb) / 0.26), transparent 62%), radial-gradient(880px 580px at 82% 10%, rgb(var(--lp-accent-secondary-rgb) / 0.20), transparent 62%), radial-gradient(820px 560px at 66% 84%, rgb(var(--lp-accent-tertiary-rgb) / 0.14), transparent 66%), var(--lp-surface-tint)',
+                  'radial-gradient(960px 580px at 18% 18%, rgb(var(--lp-accent-primary-rgb) / 0.14), transparent 62%), radial-gradient(880px 580px at 82% 10%, rgb(var(--lp-accent-secondary-rgb) / 0.10), transparent 62%), radial-gradient(820px 560px at 66% 84%, rgb(var(--lp-accent-tertiary-rgb) / 0.08), transparent 66%), var(--lp-surface-tint)',
                 boxShadow: 'var(--lp-shadow-strong)',
               }}
             >
@@ -1110,7 +1125,7 @@ export default function LandingPageNew() {
           </FadeIn>
         </Section>
 
-        <Section id="stories" className="py-16 sm:py-24" style={{ background: 'linear-gradient(180deg, var(--lp-bg-1), var(--lp-bg))' }}>
+        <Section id="stories" className="py-16 sm:py-24" style={{ background: 'var(--lp-bg-1)' }}>
           <FadeIn>
             <div className="max-w-2xl">
               <div className="text-[11px] font-extrabold uppercase tracking-[0.24em]" style={{ color: 'var(--lp-text-muted)' }}>
@@ -1198,7 +1213,7 @@ export default function LandingPageNew() {
           </div>
         </Section>
 
-        <Section id="pricing" className="py-16 sm:py-24" style={{ background: 'linear-gradient(180deg, var(--lp-bg), var(--lp-bg-1))' }}>
+        <Section id="pricing" className="py-16 sm:py-24" style={{ background: 'var(--lp-bg-2)' }}>
           <FadeIn>
             <div className="max-w-2xl">
               <div className="text-[11px] font-extrabold uppercase tracking-[0.24em]" style={{ color: 'var(--lp-text-muted)' }}>
@@ -1256,7 +1271,7 @@ export default function LandingPageNew() {
           </div>
         </Section>
 
-        <Section id="contact" className="py-16 sm:py-24" style={{ background: 'linear-gradient(180deg, var(--lp-bg-1), var(--lp-bg))' }}>
+        <Section id="contact" className="py-16 sm:py-24" style={{ background: 'var(--lp-bg-1)' }}>
           <FadeIn>
             <div className="grid gap-8 lg:grid-cols-2 lg:items-start">
               <div>
@@ -1310,14 +1325,14 @@ export default function LandingPageNew() {
           </FadeIn>
         </Section>
 
-        <Section className="py-16 sm:py-24" style={{ background: 'linear-gradient(180deg, var(--lp-bg), var(--lp-bg-2))' }}>
+        <Section className="py-16 sm:py-24" style={{ background: 'var(--lp-bg-2)' }}>
           <FadeIn>
             <div
               className="rounded-[28px] border px-6 py-10 sm:px-10"
               style={{
                 borderColor: 'var(--lp-border)',
                 background:
-                  'radial-gradient(980px 560px at 16% 12%, rgb(var(--lp-accent-primary-rgb) / 0.30), transparent 62%), radial-gradient(880px 560px at 86% 22%, rgb(var(--lp-accent-secondary-rgb) / 0.22), transparent 62%), radial-gradient(820px 540px at 62% 92%, rgb(var(--lp-accent-tertiary-rgb) / 0.14), transparent 66%), linear-gradient(135deg, rgb(var(--lp-accent-primary-rgb) / 0.12), rgb(var(--lp-accent-tertiary-rgb) / 0.08)), var(--lp-surface-tint)',
+                  'radial-gradient(980px 560px at 16% 12%, rgb(var(--lp-accent-primary-rgb) / 0.18), transparent 62%), radial-gradient(880px 560px at 86% 22%, rgb(var(--lp-accent-secondary-rgb) / 0.14), transparent 62%), radial-gradient(820px 540px at 62% 92%, rgb(var(--lp-accent-tertiary-rgb) / 0.10), transparent 66%), var(--lp-surface-tint)',
                 boxShadow: 'var(--lp-shadow-strong)',
               }}
             >
