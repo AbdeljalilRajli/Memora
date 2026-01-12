@@ -83,14 +83,27 @@ export function NoteEditor({ noteId, noteTitle, initialContent }) {
   if (!editor) return null;
 
   const setLink = () => {
+    const { from, to } = editor.state.selection;
     const prev = editor.getAttributes('link').href;
     const url = window.prompt('Paste a link URL', prev || '');
     if (url === null) return;
     if (url === '') {
-      editor.chain().focus().extendMarkRange('link').unsetLink().run();
+      editor
+        .chain()
+        .focus()
+        .setTextSelection({ from, to })
+        .extendMarkRange('link')
+        .unsetLink()
+        .run();
       return;
     }
-    editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
+    editor
+      .chain()
+      .focus()
+      .setTextSelection({ from, to })
+      .extendMarkRange('link')
+      .setLink({ href: url })
+      .run();
   };
 
   const showToolbar = focused || hasSelection;

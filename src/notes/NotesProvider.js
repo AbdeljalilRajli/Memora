@@ -76,6 +76,14 @@ function derivePreview(contentJSON) {
   return preview;
 }
 
+function deriveDescription(note) {
+  const existing = (note?.description || '').trim();
+  if (existing) return existing;
+  const fromPreview = (note?.preview || '').trim();
+  if (fromPreview) return fromPreview;
+  return derivePreview(note?.content).trim();
+}
+
 const EMPTY_DOC = {
   type: 'doc',
   content: [
@@ -101,6 +109,7 @@ function fromDbNote(row) {
     colorId: normalizeColorId(row.color),
     folderId: row?.folder_id ?? null,
     pinned: false,
+    isDraft: false,
     createdAt: row.created_at ?? new Date().toISOString(),
     updatedAt: row.updated_at ?? new Date().toISOString(),
   };
@@ -131,7 +140,7 @@ export function NotesProvider({ userId, children }) {
   const canPersistNote = useCallback((note) => {
     if (!note) return false;
     if (!(note.title || '').trim()) return false;
-    if (!(note.description || '').trim()) return false;
+    if (!deriveDescription(note)) return false;
     return true;
   }, []);
 
@@ -158,7 +167,7 @@ export function NotesProvider({ userId, children }) {
           id: n.id,
           user_id: userId,
           title: n.title.trim(),
-          description: n.description.trim(),
+          description: deriveDescription(n),
           content: n.content ?? cloneDoc(EMPTY_DOC),
           color: normalizeDbColor(n.colorId),
           folder_id: n.folderId || null,
@@ -169,7 +178,7 @@ export function NotesProvider({ userId, children }) {
         if (!candidates.length) {
           throw new Error('Save failed: note not found in memory. Please try again.');
         }
-        throw new Error('Please fill in both Title and Description before saving.');
+        throw new Error('Please fill in a Title and start writing before saving.');
       }
 
       setSaveStatus('saving');
@@ -201,6 +210,8 @@ export function NotesProvider({ userId, children }) {
       }
 
       returnedIds.forEach((id) => dirtyIdsRef.current.delete(id));
+
+      setNotes((prev) => prev.map((n) => (returnedIds.includes(n.id) ? { ...n, isDraft: false } : n)));
       setSaveStatus(dirtyIdsRef.current.size ? 'dirty' : 'saved');
 
       return { savedIds: returnedIds };
@@ -301,6 +312,7 @@ export function NotesProvider({ userId, children }) {
         colorId: 'mist',
         folderId: null,
         pinned: false,
+        isDraft: true,
         createdAt: now,
         updatedAt: now,
       };

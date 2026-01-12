@@ -119,7 +119,7 @@ function NotesWorkspaceInner({ userEmail, onLogout, loggingOut, supabaseHost }) 
     }
   };
 
-  const canSave = Boolean((note?.title || '').trim() && (note?.description || '').trim());
+  const canSave = Boolean((note?.title || '').trim() && ((note?.description || '').trim() || (note?.preview || '').trim()));
 
   const statusLabel = useMemo(() => {
     if (lastSaveError) return supabaseHost ? `${lastSaveError} (${supabaseHost})` : lastSaveError;

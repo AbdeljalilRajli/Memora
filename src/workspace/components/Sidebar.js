@@ -18,7 +18,7 @@ export function Sidebar() {
   const [query, setQuery] = useState('');
 
   const sorted = useMemo(() => {
-    const copy = [...notes];
+    const copy = notes.filter((n) => !n.isDraft);
     copy.sort((a, b) => {
       const da = new Date(a.updatedAt).getTime();
       const db = new Date(b.updatedAt).getTime();

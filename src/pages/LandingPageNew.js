@@ -78,7 +78,44 @@ function MockFrame({ title, children }) {
   );
 }
 
+function ScreenshotFrame({ title, src, alt }) {
+  return (
+    <div
+      className="overflow-hidden rounded-[22px] border"
+      style={{
+        borderColor: 'var(--lp-border)',
+        background: 'var(--lp-surface-strong)',
+        boxShadow: 'var(--lp-shadow)',
+      }}
+    >
+      <div
+        className="flex h-11 items-center justify-between px-4"
+        style={{
+          background:
+            'linear-gradient(90deg, rgb(var(--lp-accent-primary-rgb) / 0.18), rgb(var(--lp-accent-secondary-rgb) / 0.12))',
+          borderBottom: '1px solid var(--lp-border)',
+        }}
+      >
+        <div className="flex items-center gap-2">
+          <span className="h-2.5 w-2.5 rounded-full" style={{ background: 'rgb(var(--lp-accent-primary-rgb) / 0.80)' }} />
+          <span className="h-2.5 w-2.5 rounded-full" style={{ background: 'rgb(var(--lp-accent-secondary-rgb) / 0.78)' }} />
+          <span className="h-2.5 w-2.5 rounded-full" style={{ background: 'rgb(var(--lp-accent-tertiary-rgb) / 0.76)' }} />
+        </div>
+        <div className="text-xs font-extrabold tracking-tight" style={{ color: 'var(--lp-text)' }}>
+          {title}
+        </div>
+      </div>
+      <div className="p-4 sm:p-5">
+        <div className="overflow-hidden rounded-[18px] border" style={{ borderColor: 'var(--lp-border)', background: 'rgb(255 255 255 / 0.02)' }}>
+          <img src={src} alt={alt} className="block h-auto w-full" loading="lazy" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function MockEditor({ compact = false }) {
+  const reduceMotion = useReducedMotion();
   return (
     <MockFrame title="Editor">
       <div className="flex flex-wrap gap-2">
@@ -94,22 +131,61 @@ function MockEditor({ compact = false }) {
       </div>
 
       <div className="mt-6">
-        <div className="h-5 w-2/3 rounded-full" style={{ background: 'rgb(var(--lp-accent-primary-rgb) / 0.16)' }} />
+        <motion.div
+          className="h-5 w-2/3 rounded-full"
+          style={{ background: 'rgb(var(--lp-accent-primary-rgb) / 0.16)' }}
+          animate={reduceMotion ? undefined : { opacity: [0.55, 0.95, 0.55] }}
+          transition={reduceMotion ? undefined : { duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
+        />
         <div className="mt-4 grid gap-3">
-          <div className="h-3 w-full rounded-full" style={{ background: 'rgb(148 163 184 / 0.22)' }} />
-          <div className="h-3 w-11/12 rounded-full" style={{ background: 'rgb(148 163 184 / 0.18)' }} />
-          <div className="h-3 w-4/5 rounded-full" style={{ background: 'rgb(148 163 184 / 0.18)' }} />
+          <motion.div
+            className="h-3 w-full rounded-full"
+            style={{ background: 'rgb(148 163 184 / 0.22)' }}
+            animate={reduceMotion ? undefined : { opacity: [0.65, 0.95, 0.65] }}
+            transition={reduceMotion ? undefined : { duration: 2.6, repeat: Infinity, ease: 'easeInOut' }}
+          />
+          <motion.div
+            className="h-3 w-11/12 rounded-full"
+            style={{ background: 'rgb(148 163 184 / 0.18)' }}
+            animate={reduceMotion ? undefined : { opacity: [0.55, 0.9, 0.55] }}
+            transition={reduceMotion ? undefined : { duration: 2.6, repeat: Infinity, ease: 'easeInOut', delay: 0.15 }}
+          />
+          <motion.div
+            className="h-3 w-4/5 rounded-full"
+            style={{ background: 'rgb(148 163 184 / 0.18)' }}
+            animate={reduceMotion ? undefined : { opacity: [0.55, 0.9, 0.55] }}
+            transition={reduceMotion ? undefined : { duration: 2.6, repeat: Infinity, ease: 'easeInOut', delay: 0.3 }}
+          />
         </div>
 
         <div className="mt-6 grid gap-4">
           {[0, 1, 2].map((i) => (
             <div key={i} className="flex items-center gap-3">
-              <span
+              <motion.span
                 className="h-4 w-4 rounded-[6px] border"
                 style={{
-                  borderColor: i === 1 ? 'rgb(var(--lp-accent-tertiary-rgb) / 0.30)' : 'var(--lp-border)',
-                  background: i === 1 ? 'rgb(var(--lp-accent-tertiary-rgb) / 0.12)' : 'rgb(255 255 255 / 0.02)',
+                  borderColor: 'var(--lp-border)',
+                  background: 'rgb(255 255 255 / 0.02)',
                 }}
+                animate={
+                  reduceMotion
+                    ? undefined
+                    : {
+                        borderColor:
+                          i === 0
+                            ? ['var(--lp-border)', 'rgb(var(--lp-accent-tertiary-rgb) / 0.34)', 'var(--lp-border)']
+                            : i === 1
+                              ? ['rgb(var(--lp-accent-tertiary-rgb) / 0.34)', 'var(--lp-border)', 'rgb(var(--lp-accent-tertiary-rgb) / 0.34)']
+                              : ['var(--lp-border)', 'var(--lp-border)', 'rgb(var(--lp-accent-tertiary-rgb) / 0.34)'],
+                        background:
+                          i === 0
+                            ? ['rgb(255 255 255 / 0.02)', 'rgb(var(--lp-accent-tertiary-rgb) / 0.14)', 'rgb(255 255 255 / 0.02)']
+                            : i === 1
+                              ? ['rgb(var(--lp-accent-tertiary-rgb) / 0.14)', 'rgb(255 255 255 / 0.02)', 'rgb(var(--lp-accent-tertiary-rgb) / 0.14)']
+                              : ['rgb(255 255 255 / 0.02)', 'rgb(255 255 255 / 0.02)', 'rgb(var(--lp-accent-tertiary-rgb) / 0.14)'],
+                      }
+                }
+                transition={reduceMotion ? undefined : { duration: 2.6, repeat: Infinity, ease: 'easeInOut', delay: i * 0.12 }}
               />
               <div className="h-3 flex-1 rounded-full" style={{ background: 'rgb(148 163 184 / 0.20)' }} />
             </div>
@@ -121,6 +197,7 @@ function MockEditor({ compact = false }) {
 }
 
 function MockSearch({ compact = false }) {
+  const reduceMotion = useReducedMotion();
   return (
     <MockFrame title="Search">
       <div
@@ -129,32 +206,47 @@ function MockSearch({ compact = false }) {
       >
         <div className="flex items-center justify-between gap-3">
           <div className="h-2.5 w-2/3 rounded-full" style={{ background: 'rgb(148 163 184 / 0.20)' }} />
-          <span
+          <motion.span
             className="inline-flex h-7 items-center rounded-full border px-3 text-[11px] font-extrabold"
             style={{
               borderColor: 'rgb(var(--lp-accent-secondary-rgb) / 0.30)',
               background: 'rgb(var(--lp-accent-secondary-rgb) / 0.14)',
               color: 'var(--lp-text)',
             }}
+            animate={reduceMotion ? undefined : { scale: [1, 1.04, 1] }}
+            transition={reduceMotion ? undefined : { duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
           >
             Cmd K
-          </span>
+          </motion.span>
         </div>
       </div>
 
       <div className="mt-5 grid gap-3">
         {Array.from({ length: compact ? 3 : 4 }).map((_, i) => (
-          <div
+          <motion.div
             key={i}
             className="rounded-[16px] border px-4 py-3"
             style={{
               borderColor: 'var(--lp-border)',
               background: i === 0 ? 'rgb(var(--lp-accent-primary-rgb) / 0.10)' : 'rgb(255 255 255 / 0.03)',
             }}
+            animate={
+              reduceMotion
+                ? undefined
+                : {
+                    background:
+                      i === 0
+                        ? ['rgb(var(--lp-accent-primary-rgb) / 0.10)', 'rgb(255 255 255 / 0.03)', 'rgb(255 255 255 / 0.03)']
+                        : i === 1
+                          ? ['rgb(255 255 255 / 0.03)', 'rgb(var(--lp-accent-primary-rgb) / 0.10)', 'rgb(255 255 255 / 0.03)']
+                          : ['rgb(255 255 255 / 0.03)', 'rgb(255 255 255 / 0.03)', 'rgb(var(--lp-accent-primary-rgb) / 0.10)'],
+                  }
+            }
+            transition={reduceMotion ? undefined : { duration: 2.7, repeat: Infinity, ease: 'easeInOut', delay: 0.05 * i }}
           >
             <div className="h-3 w-2/3 rounded-full" style={{ background: 'rgb(148 163 184 / 0.26)' }} />
             <div className="mt-2 h-2.5 w-full rounded-full" style={{ background: 'rgb(148 163 184 / 0.18)' }} />
-          </div>
+          </motion.div>
         ))}
       </div>
     </MockFrame>
@@ -162,6 +254,7 @@ function MockSearch({ compact = false }) {
 }
 
 function MockColors({ compact = false }) {
+  const reduceMotion = useReducedMotion();
   const colors = useMemo(
     () => [
       { bg: 'rgb(var(--lp-accent-primary-rgb) / 0.16)', border: 'rgb(var(--lp-accent-primary-rgb) / 0.30)' },
@@ -201,7 +294,14 @@ function MockColors({ compact = false }) {
 
       <div className="mt-6 grid grid-cols-5 gap-2">
         {colors.map((c, idx) => (
-          <div key={idx} className="h-10 rounded-[14px] border" style={{ borderColor: c.border, background: c.bg }} aria-hidden="true" />
+          <motion.div
+            key={idx}
+            className="h-10 rounded-[14px] border"
+            style={{ borderColor: c.border, background: c.bg }}
+            aria-hidden="true"
+            animate={reduceMotion ? undefined : { y: [0, -2, 0] }}
+            transition={reduceMotion ? undefined : { duration: 1.6, repeat: Infinity, ease: 'easeInOut', delay: idx * 0.12 }}
+          />
         ))}
       </div>
     </MockFrame>
@@ -209,30 +309,42 @@ function MockColors({ compact = false }) {
 }
 
 function MockSharing({ compact = false }) {
+  const reduceMotion = useReducedMotion();
   return (
     <MockFrame title="Sharing">
       <div className="grid gap-3">
-        <div
+        <motion.div
           className="rounded-[16px] border px-4 py-3"
           style={{ borderColor: 'var(--lp-border)', background: 'rgb(255 255 255 / 0.03)' }}
+          animate={
+            reduceMotion
+              ? undefined
+              : {
+                  borderColor: ['var(--lp-border)', 'rgb(var(--lp-accent-tertiary-rgb) / 0.30)', 'var(--lp-border)'],
+                  background: ['rgb(255 255 255 / 0.03)', 'rgb(var(--lp-accent-tertiary-rgb) / 0.10)', 'rgb(255 255 255 / 0.03)'],
+                }
+          }
+          transition={reduceMotion ? undefined : { duration: 2.6, repeat: Infinity, ease: 'easeInOut' }}
         >
           <div className="text-sm font-black" style={{ color: 'var(--lp-text)' }}>
             Share link
           </div>
           <div className="mt-2 flex items-center justify-between gap-3">
             <div className="h-2.5 flex-1 rounded-full" style={{ background: 'rgb(148 163 184 / 0.20)' }} />
-            <span
+            <motion.span
               className="inline-flex h-7 items-center rounded-full border px-3 text-[11px] font-extrabold"
               style={{
                 borderColor: 'rgb(var(--lp-accent-tertiary-rgb) / 0.28)',
                 background: 'rgb(var(--lp-accent-tertiary-rgb) / 0.12)',
                 color: 'var(--lp-text)',
               }}
+              animate={reduceMotion ? undefined : { opacity: [1, 0.75, 1], scale: [1, 1.03, 1] }}
+              transition={reduceMotion ? undefined : { duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
             >
               Copy
-            </span>
+            </motion.span>
           </div>
-        </div>
+        </motion.div>
 
         <div
           className="rounded-[16px] border px-4 py-3"
@@ -280,6 +392,7 @@ function MockSharing({ compact = false }) {
 }
 
 function MockAutosave({ compact = false }) {
+  const reduceMotion = useReducedMotion();
   return (
     <MockFrame title="Autosave">
       <div className="flex items-center justify-between">
@@ -288,19 +401,46 @@ function MockAutosave({ compact = false }) {
             Status
           </div>
           <div className="mt-1 text-xs font-bold" style={{ color: 'var(--lp-text-muted)' }}>
-            updated just now
+            <motion.span
+              style={{ display: 'inline-block' }}
+              animate={reduceMotion ? undefined : { opacity: [1, 0.35, 1] }}
+              transition={reduceMotion ? undefined : { duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
+            >
+              updating…
+            </motion.span>
           </div>
         </div>
-        <span
-          className="inline-flex h-7 items-center rounded-full border px-3 text-[11px] font-extrabold"
-          style={{
-            borderColor: 'rgb(var(--lp-accent-secondary-rgb) / 0.28)',
-            background: 'rgb(var(--lp-accent-secondary-rgb) / 0.12)',
-            color: 'var(--lp-text)',
-          }}
-        >
-          Saved
-        </span>
+        <div className="relative">
+          <motion.span
+            className="inline-flex h-7 items-center rounded-full border px-3 text-[11px] font-extrabold"
+            style={{
+              borderColor: 'rgb(var(--lp-accent-primary-rgb) / 0.30)',
+              background: 'rgb(var(--lp-accent-primary-rgb) / 0.12)',
+              color: 'var(--lp-text)',
+              position: 'absolute',
+              inset: 0,
+              justifyContent: 'center',
+              whiteSpace: 'nowrap',
+            }}
+            animate={reduceMotion ? undefined : { opacity: [1, 0, 1] }}
+            transition={reduceMotion ? undefined : { duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
+          >
+            Saving…
+          </motion.span>
+          <motion.span
+            className="inline-flex h-7 items-center rounded-full border px-3 text-[11px] font-extrabold"
+            style={{
+              borderColor: 'rgb(var(--lp-accent-secondary-rgb) / 0.28)',
+              background: 'rgb(var(--lp-accent-secondary-rgb) / 0.12)',
+              color: 'var(--lp-text)',
+              whiteSpace: 'nowrap',
+            }}
+            animate={reduceMotion ? undefined : { opacity: [0, 1, 0] }}
+            transition={reduceMotion ? undefined : { duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
+          >
+            Saved
+          </motion.span>
+        </div>
       </div>
 
       <div className="mt-5 grid gap-3">
@@ -311,8 +451,18 @@ function MockAutosave({ compact = false }) {
             style={{ borderColor: 'var(--lp-border)', background: 'rgb(255 255 255 / 0.03)' }}
           >
             <div className="flex items-center justify-between">
-              <div className="h-2.5 w-1/2 rounded-full" style={{ background: 'rgb(148 163 184 / 0.18)' }} />
-              <div className="h-2.5 w-16 rounded-full" style={{ background: 'rgb(148 163 184 / 0.14)' }} />
+              <motion.div
+                className="h-2.5 w-1/2 rounded-full"
+                style={{ background: 'rgb(148 163 184 / 0.18)' }}
+                animate={reduceMotion ? undefined : { opacity: [0.55, 0.92, 0.55] }}
+                transition={reduceMotion ? undefined : { duration: 2.2, repeat: Infinity, ease: 'easeInOut', delay: 0.12 * i }}
+              />
+              <motion.div
+                className="h-2.5 w-16 rounded-full"
+                style={{ background: 'rgb(148 163 184 / 0.14)' }}
+                animate={reduceMotion ? undefined : { opacity: [0.45, 0.85, 0.45] }}
+                transition={reduceMotion ? undefined : { duration: 2.2, repeat: Infinity, ease: 'easeInOut', delay: 0.18 * i }}
+              />
             </div>
           </div>
         ))}
@@ -579,7 +729,7 @@ export default function LandingPageNew() {
         aria-hidden="true"
         style={{
           background:
-            'radial-gradient(1000px 680px at 16% 6%, rgb(var(--lp-accent-primary-rgb) / 0.22), transparent 62%), radial-gradient(920px 620px at 88% 10%, rgb(var(--lp-accent-secondary-rgb) / 0.16), transparent 60%), radial-gradient(860px 580px at 68% 86%, rgb(var(--lp-accent-tertiary-rgb) / 0.12), transparent 62%)',
+            'radial-gradient(1100px 700px at 18% 0%, rgb(var(--lp-accent-secondary-rgb) / 0.16), transparent 62%), radial-gradient(1000px 680px at 82% 12%, rgb(var(--lp-accent-primary-rgb) / 0.14), transparent 60%), radial-gradient(900px 650px at 55% 92%, rgb(var(--lp-accent-tertiary-rgb) / 0.12), transparent 62%)',
           opacity: 1,
         }}
       />
@@ -610,11 +760,14 @@ export default function LandingPageNew() {
             <a href="#features" className="transition-colors" style={{ color: 'var(--lp-text-secondary)' }}>
               Features
             </a>
-            <a href="#how" className="transition-colors" style={{ color: 'var(--lp-text-secondary)' }}>
-              How it works
-            </a>
             <a href="#stories" className="transition-colors" style={{ color: 'var(--lp-text-secondary)' }}>
               Stories
+            </a>
+            <a href="#pricing" className="transition-colors" style={{ color: 'var(--lp-text-secondary)' }}>
+              Pricing
+            </a>
+            <a href="#contact" className="transition-colors" style={{ color: 'var(--lp-text-secondary)' }}>
+              Contact
             </a>
           </nav>
 
@@ -662,7 +815,7 @@ export default function LandingPageNew() {
                 className="mt-6 text-4xl font-black tracking-tight sm:text-5xl lg:text-6xl"
                 style={{ letterSpacing: '-0.04em' }}
               >
-                Build momentum with
+                Notes that feel
                 <br />
                 <span
                   style={{
@@ -672,9 +825,9 @@ export default function LandingPageNew() {
                     color: 'transparent',
                   }}
                 >
-                  focused
+                  like a real product
                 </span>{' '}
-                notes.
+                .
               </motion.h1>
 
               <motion.p
@@ -682,7 +835,7 @@ export default function LandingPageNew() {
                 className="mt-5 max-w-xl text-base leading-relaxed sm:text-lg"
                 style={{ color: 'var(--lp-text-secondary)' }}
               >
-                Write, search, color-code, and share — with just enough structure to keep you clear.
+                A focused editor with gentle organization: color-coded notes, fast search, and share links when you need them.
               </motion.p>
 
               <motion.div variants={heroLine} className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -698,12 +851,19 @@ export default function LandingPageNew() {
                   Get started free
                 </Link>
                 <Link
-                  to="/login"
+                  to="/app"
                   className="inline-flex h-12 items-center justify-center rounded-[16px] border px-6 text-sm font-extrabold"
                   style={{ borderColor: 'var(--lp-border)', background: 'var(--lp-surface)', color: 'var(--lp-text)' }}
                 >
-                  Login
+                  Open app
                 </Link>
+                <a
+                  href="#features"
+                  className="inline-flex h-12 items-center justify-center rounded-[16px] border px-6 text-sm font-extrabold"
+                  style={{ borderColor: 'var(--lp-border)', background: 'transparent', color: 'var(--lp-text)' }}
+                >
+                  See features
+                </a>
               </motion.div>
 
               <motion.div variants={heroLine} className="mt-8 flex items-center gap-4">
@@ -741,7 +901,7 @@ export default function LandingPageNew() {
                 animate={reduceMotion ? undefined : { y: [0, -10, 0] }}
                 transition={reduceMotion ? undefined : { duration: 7.5, ease: 'easeInOut', repeat: Infinity }}
               >
-                <MockEditor />
+                <ScreenshotFrame title="Dashboard" src="/dashboard.png" alt="Listem dashboard" />
               </motion.div>
 
               <div
@@ -781,27 +941,28 @@ export default function LandingPageNew() {
           </div>
         </Section>
 
-        <Section className="pb-6" style={{ background: 'var(--lp-bg)' }}>
+        <Section className="pb-10" style={{ background: 'var(--lp-bg)' }}>
           <FadeIn>
-            <div
-              className="mx-auto grid max-w-6xl grid-cols-2 gap-3 rounded-[22px] border p-4 sm:grid-cols-4"
-              style={{ borderColor: 'var(--lp-border)', background: 'var(--lp-surface)' }}
-            >
-              {['Studio-grade', 'Fast sync', 'Private by default', 'Built for focus'].map((item) => (
-                <div
-                  key={item}
-                  className="flex items-center gap-3 rounded-[18px] border px-4 py-4"
-                  style={{ borderColor: 'var(--lp-border)', background: 'rgb(255 255 255 / 0.03)' }}
-                >
-                  <span
-                    className="h-2 w-2 rounded-full"
-                    style={{ background: 'linear-gradient(135deg, var(--lp-accent-primary), var(--lp-accent-secondary))' }}
-                  />
-                  <span className="text-sm font-extrabold" style={{ color: 'var(--lp-text)' }}>
-                    {item}
-                  </span>
-                </div>
-              ))}
+            <div className="mx-auto grid max-w-6xl gap-3 sm:grid-cols-3">
+              {[{ k: '2 min', t: 'Setup', d: 'Start fast' }, { k: 'PDF/MD/TXT', t: 'Export', d: 'Portable notes' }, { k: 'Links', t: 'Sharing', d: 'Send when needed' }].map(
+                (item) => (
+                  <div
+                    key={item.t}
+                    className="rounded-[22px] border p-5"
+                    style={{ borderColor: 'var(--lp-border)', background: 'var(--lp-surface-strong)', boxShadow: 'var(--lp-shadow)' }}
+                  >
+                    <div className="text-xs font-black" style={{ color: 'var(--lp-text-muted)' }}>
+                      {item.k}
+                    </div>
+                    <div className="mt-2 text-base font-black tracking-tight" style={{ color: 'var(--lp-text)' }}>
+                      {item.t}
+                    </div>
+                    <div className="mt-1 text-sm font-bold" style={{ color: 'var(--lp-text-secondary)' }}>
+                      {item.d}
+                    </div>
+                  </div>
+                )
+              )}
             </div>
           </FadeIn>
         </Section>
@@ -941,7 +1102,7 @@ export default function LandingPageNew() {
                         opacity: 0.75,
                       }}
                     />
-                    <MockDashboard />
+                    <ScreenshotFrame title="Listem Notes" src="/dashboard.png" alt="Listem dashboard" />
                   </div>
                 </motion.div>
               </div>
@@ -1035,6 +1196,118 @@ export default function LandingPageNew() {
               </FadeIn>
             ))}
           </div>
+        </Section>
+
+        <Section id="pricing" className="py-16 sm:py-24" style={{ background: 'linear-gradient(180deg, var(--lp-bg), var(--lp-bg-1))' }}>
+          <FadeIn>
+            <div className="max-w-2xl">
+              <div className="text-[11px] font-extrabold uppercase tracking-[0.24em]" style={{ color: 'var(--lp-text-muted)' }}>
+                Pricing
+              </div>
+              <h2 className="mt-3 text-3xl font-black tracking-tight sm:text-4xl" style={{ letterSpacing: '-0.03em' }}>
+                Free to start.
+              </h2>
+              <p className="mt-3 max-w-prose text-sm leading-relaxed sm:text-base" style={{ color: 'var(--lp-text-secondary)' }}>
+                Simple and honest. You can iterate later when you add teams.
+              </p>
+            </div>
+          </FadeIn>
+
+          <div className="mt-10 grid gap-4 md:grid-cols-3">
+            {[
+              { title: 'Starter', price: 'Free', cta: 'Start', highlight: true },
+              { title: 'Plus', price: 'Soon', cta: 'Notify me', highlight: false },
+              { title: 'Teams', price: 'Later', cta: 'Talk to us', highlight: false },
+            ].map((p) => (
+              <FadeIn key={p.title}>
+                <div
+                  className="rounded-[22px] border p-6"
+                  style={{
+                    borderColor: p.highlight ? 'rgb(var(--lp-accent-primary-rgb) / 0.30)' : 'var(--lp-border)',
+                    background: 'var(--lp-surface-strong)',
+                    boxShadow: 'var(--lp-shadow)',
+                  }}
+                >
+                  <div className="text-xs font-black" style={{ color: 'var(--lp-text-muted)' }}>
+                    {p.title}
+                  </div>
+                  <div className="mt-3 text-2xl font-black tracking-tight" style={{ letterSpacing: '-0.02em' }}>
+                    {p.price}
+                  </div>
+                  <div className="mt-2 text-sm font-bold" style={{ color: 'var(--lp-text-secondary)' }}>
+                    All core features to write and export.
+                  </div>
+                  <div className="mt-6">
+                    <a
+                      href={p.title === 'Starter' ? '/signup' : '#contact'}
+                      className="inline-flex h-11 w-full items-center justify-center rounded-[16px] px-5 text-sm font-extrabold"
+                      style={{
+                        background: p.highlight ? 'linear-gradient(135deg, var(--lp-accent-primary), var(--lp-accent-secondary))' : 'var(--lp-surface)',
+                        color: p.highlight ? 'white' : 'var(--lp-text)',
+                        border: p.highlight ? 'none' : '1px solid var(--lp-border)',
+                      }}
+                    >
+                      {p.cta}
+                    </a>
+                  </div>
+                </div>
+              </FadeIn>
+            ))}
+          </div>
+        </Section>
+
+        <Section id="contact" className="py-16 sm:py-24" style={{ background: 'linear-gradient(180deg, var(--lp-bg-1), var(--lp-bg))' }}>
+          <FadeIn>
+            <div className="grid gap-8 lg:grid-cols-2 lg:items-start">
+              <div>
+                <div className="text-[11px] font-extrabold uppercase tracking-[0.24em]" style={{ color: 'var(--lp-text-muted)' }}>
+                  Contact
+                </div>
+                <h2 className="mt-3 text-3xl font-black tracking-tight sm:text-4xl" style={{ letterSpacing: '-0.03em' }}>
+                  Want something customized?
+                </h2>
+                <p className="mt-3 max-w-prose text-sm leading-relaxed sm:text-base" style={{ color: 'var(--lp-text-secondary)' }}>
+                  Tell us what you need Listem to become. We’ll prioritize the roadmap.
+                </p>
+              </div>
+
+              <div
+                className="rounded-[22px] border p-6"
+                style={{ borderColor: 'var(--lp-border)', background: 'var(--lp-surface-strong)', boxShadow: 'var(--lp-shadow)' }}
+              >
+                <form className="grid gap-3" onSubmit={(e) => e.preventDefault()}>
+                  <label className="grid gap-2 text-sm font-bold" style={{ color: 'var(--lp-text-secondary)' }}>
+                    Email
+                    <input
+                      type="email"
+                      placeholder="you@domain.com"
+                      className="h-11 rounded-[14px] border px-4"
+                      style={{ borderColor: 'var(--lp-border)', background: 'rgb(255 255 255 / 0.70)', color: 'var(--lp-text)' }}
+                    />
+                  </label>
+                  <label className="grid gap-2 text-sm font-bold" style={{ color: 'var(--lp-text-secondary)' }}>
+                    What do you need?
+                    <textarea
+                      rows={4}
+                      placeholder="Tell us what you want to build."
+                      className="rounded-[14px] border p-4"
+                      style={{ borderColor: 'var(--lp-border)', background: 'rgb(255 255 255 / 0.70)', color: 'var(--lp-text)' }}
+                    />
+                  </label>
+                  <button
+                    type="submit"
+                    className="mt-2 inline-flex h-11 items-center justify-center rounded-[16px] px-5 text-sm font-extrabold"
+                    style={{ background: 'rgba(11, 18, 32, 0.92)', color: 'white' }}
+                  >
+                    Send
+                  </button>
+                  <div className="text-xs font-bold" style={{ color: 'var(--lp-text-muted)' }}>
+                    This is a demo form for now (no backend hook yet).
+                  </div>
+                </form>
+              </div>
+            </div>
+          </FadeIn>
         </Section>
 
         <Section className="py-16 sm:py-24" style={{ background: 'linear-gradient(180deg, var(--lp-bg), var(--lp-bg-2))' }}>

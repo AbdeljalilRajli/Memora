@@ -75,35 +75,39 @@ export function DashboardPane({ onOpenEditor }) {
     return new Date(0);
   }, [tab]);
 
+  const timeScopedNotes = useMemo(() => {
+    return notes.filter((n) => !n.isDraft).filter((n) => isAfter(n.updatedAt, timeMin));
+  }, [notes, timeMin]);
+
   const filteredNotes = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return notes
+    return timeScopedNotes
       .filter((n) => {
         if (folderFilter.type === 'pinned') return Boolean(n.pinned);
         if (folderFilter.type === 'unfiled') return !n.folderId;
         if (folderFilter.type === 'folder') return n.folderId === folderFilter.id;
         return true;
       })
-      .filter((n) => isAfter(n.updatedAt, timeMin))
       .filter((n) => {
         if (!q) return true;
         const title = (n.title || '').toLowerCase();
         const preview = (n.preview || '').toLowerCase();
         return title.includes(q) || preview.includes(q);
       });
-  }, [folderFilter, notes, query, timeMin]);
+  }, [folderFilter, query, timeScopedNotes]);
 
-  const pinnedCount = useMemo(() => notes.filter((n) => n.pinned).length, [notes]);
-  const unfiledCount = useMemo(() => notes.filter((n) => !n.folderId).length, [notes]);
+  const pinnedCount = useMemo(() => timeScopedNotes.filter((n) => n.pinned).length, [timeScopedNotes]);
+  const unfiledCount = useMemo(() => timeScopedNotes.filter((n) => !n.folderId).length, [timeScopedNotes]);
+  const allCount = useMemo(() => timeScopedNotes.length, [timeScopedNotes]);
 
   const folderCounts = useMemo(() => {
     const map = new Map();
-    notes.forEach((n) => {
+    timeScopedNotes.forEach((n) => {
       if (!n.folderId) return;
       map.set(n.folderId, (map.get(n.folderId) || 0) + 1);
     });
     return map;
-  }, [notes]);
+  }, [timeScopedNotes]);
 
   const recentFolders = useMemo(() => {
     const copy = [...folders];

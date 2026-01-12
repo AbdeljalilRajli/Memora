@@ -99,12 +99,6 @@ export function EditorPane() {
     updateNote(note.id, { title: next });
   };
 
-  const onDescriptionChange = (e) => {
-    const next = e.target.value;
-    if (!note) return;
-    updateNote(note.id, { description: next });
-  };
-
   useEffect(() => {
     const onKeyDown = (e) => {
       if (e.key === 'Escape') setColorOpen(false);
@@ -298,35 +292,9 @@ export function EditorPane() {
           />
         </Box>
 
-        <Box sx={{ mb: 1.75 }}>
-          <TextField
-            value={note.description || ''}
-            placeholder="Description (required)"
-            onChange={onDescriptionChange}
-            fullWidth
-            variant="outlined"
-            multiline
-            minRows={5}
-            InputProps={{
-              sx: {
-                borderRadius: 3,
-                fontSize: '1rem',
-                fontWeight: 400,
-                lineHeight: 1.6,
-                backgroundColor: 'rgba(255,255,255,0.98)',
-                '& textarea': { padding: '14px 14px' },
-                '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(30,30,30,0.14)' },
-                '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(30,30,30,0.20)' },
-                '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,183,0,0.85)', borderWidth: 2 },
-              },
-            }}
-            aria-label="Note description"
-          />
-        </Box>
-
         <div className="TitleContentDivider" aria-hidden="true" />
         <NoteEditor key={note.id} noteId={note.id} noteTitle={titleDraft || noteTitle} initialContent={note.content} />
       </div>
     </section>
   );
-}
+ }
