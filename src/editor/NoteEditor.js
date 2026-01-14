@@ -33,7 +33,7 @@ export function NoteEditor({ noteId, noteTitle, initialContent }) {
         linkOnPaste: true,
       }),
       Placeholder.configure({
-        placeholder: 'Write like it matters…',
+        placeholder: 'Start writing your note…',
       }),
       TaskList,
       TaskItem.configure({

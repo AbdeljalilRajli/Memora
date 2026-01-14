@@ -1688,6 +1688,7 @@ textarea,
 
  .ColorHexInput {
   flex: 1;
+  min-width: 0;
   height: 36px;
   padding: 0 12px;
   border-radius: 12px;
@@ -1711,26 +1712,58 @@ textarea,
 
  .ColorApplyButton {
   height: 36px;
-  padding: 0 12px;
+  padding: 0 14px;
+  min-width: 96px;
+  white-space: nowrap;
   border-radius: 12px;
-  border: 1px solid rgba(15, 23, 42, 0.10);
-  background: rgba(255, 255, 255, 0.78);
+  appearance: none;
+  -webkit-appearance: none;
+  border: 1px solid rgba(249, 110, 91, 0.55);
+  background-color: rgba(249, 110, 91, 0.92);
+  color: rgba(255, 255, 255, 0.98);
   font-weight: 900;
+  font-size: 0.9rem;
   cursor: pointer;
  }
 
  :root.theme-dark .ColorApplyButton {
   border-color: rgba(255, 255, 255, 0.14);
-  background: rgba(255, 255, 255, 0.10);
-  color: rgba(220, 227, 238, 0.94);
+  background-color: rgba(249, 110, 91, 0.88);
+  color: rgba(255, 255, 255, 0.98);
  }
 
- .ColorApplyButton:hover {
+ .ColorApplyButton:not(:disabled):hover {
   transform: translateY(-1px);
   box-shadow: var(--shadow-sm);
  }
 
-.EditorHeader {
+ .ColorApplyButton:disabled {
+  opacity: 1;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+  border-color: rgba(15, 23, 42, 0.18);
+  background-color: rgba(15, 23, 42, 0.10);
+  color: rgba(15, 23, 42, 0.74);
+ }
+
+ :root.theme-dark .ColorApplyButton:disabled {
+  border-color: rgba(255, 255, 255, 0.14);
+  background-color: rgba(255, 255, 255, 0.10);
+  color: rgba(255, 255, 255, 0.78);
+ }
+
+ @media (max-width: 420px) {
+  .ColorCustomRow {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .ColorApplyButton {
+    width: 100%;
+  }
+ }
+
+ .EditorHeader {
   position: sticky;
   top: 0;
   z-index: 30;
@@ -1964,7 +1997,7 @@ textarea,
 
 .EditorRoot {
   position: relative;
-  padding-top: 10px;
+  padding-top: 6px;
 }
 
 .EditorFloatingToolbar {
@@ -2027,6 +2060,37 @@ textarea,
   color: rgba(249, 110, 91, 0.95);
 }
 
+.EditorRoot .ListemEditor {
+  min-height: 360px;
+  padding: 18px 16px 22px;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+  cursor: text;
+}
+
+.EditorRoot .ListemEditor:hover {
+  border-color: rgba(15, 23, 42, 0.18);
+}
+
+.EditorRoot .ListemEditor:focus-within {
+  border-color: rgba(249, 110, 91, 0.65);
+  box-shadow: 0 0 0 4px rgba(249, 110, 91, 0.18), 0 14px 34px rgba(15, 23, 42, 0.08);
+}
+
+.EditorRoot .ProseMirror p:first-child {
+  margin-top: 0;
+}
+
+.EditorRoot .ProseMirror p:last-child {
+  margin-bottom: 0;
+}
+
+.EditorRoot .ProseMirror p.is-editor-empty:first-child::before {
+  color: rgba(15, 23, 42, 0.55);
+}
+
 .ListemEditor {
   min-height: 220px;
   padding: 18px 12px 0;
@@ -2078,7 +2142,7 @@ textarea,
 .TitleContentDivider {
   height: 1px;
   width: 100%;
-  margin: 10px 0 12px;
+  margin: 6px 0 8px;
   background: rgba(15, 23, 42, 0.12);
 }
 :root.theme-dark .TitleContentDivider {
@@ -2174,10 +2238,6 @@ textarea,
   background: rgba(249, 110, 91, 0.22);
 }
 
-.ColorApplyButton {
-  color: rgba(15, 23, 42, 0.92);
-}
-
 .NoteCardDropdown {
   position: absolute;
   right: 0;
@@ -2185,7 +2245,7 @@ textarea,
   width: 280px;
   border-radius: 18px;
   border: 1px solid rgba(15, 23, 42, 0.10);
-  background: var(--bg-surface);
+  background: rgba(255, 255, 255, 0.98);
   box-shadow: 0 18px 55px rgba(15, 23, 42, 0.12);
   backdrop-filter: blur(12px);
   padding: 12px;
@@ -2201,8 +2261,8 @@ textarea,
 }
 
 :root.theme-dark .NoteCardDropdown {
-  border-color: rgba(15, 23, 42, 0.10);
-  background: var(--bg-surface);
+  border-color: rgba(15, 23, 42, 0.12);
+  background: rgba(255, 255, 255, 0.98);
 }
 
 .NoteCardDropdownTitle {
@@ -2224,6 +2284,50 @@ textarea,
   gap: 8px;
 }
 
+.NoteCardDropdown .MiniIconButton {
+  height: 36px;
+  width: 100%;
+  border-radius: 999px;
+  appearance: none;
+  -webkit-appearance: none;
+  border: 1px solid rgba(15, 23, 42, 0.14);
+  background: rgba(255, 255, 255, 0.92);
+  color: rgba(15, 23, 42, 0.92);
+  font-weight: 900;
+  font-size: 0.9rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.06);
+  transition: transform 140ms var(--ease-out), box-shadow 140ms var(--ease-out), border-color 140ms var(--ease-out), background-color 140ms var(--ease-out);
+}
+
+.NoteCardDropdown .MiniIconButton:hover {
+  transform: translateY(-1px);
+  border-color: rgba(249, 110, 91, 0.40);
+  background: rgba(249, 110, 91, 0.10);
+  box-shadow: 0 14px 26px rgba(15, 23, 42, 0.10);
+}
+
+.NoteCardDropdown .MiniIconButton:active {
+  transform: translateY(0);
+}
+
+:root.theme-dark .NoteCardDropdown .MiniIconButton {
+  border-color: rgba(15, 23, 42, 0.14);
+  background: rgba(255, 255, 255, 0.92);
+  color: rgba(15, 23, 42, 0.92);
+}
+
+:root.theme-dark .NoteCardDropdown .MiniIconButton:hover {
+  border-color: rgba(249, 110, 91, 0.40);
+  background: rgba(249, 110, 91, 0.10);
+}
+
 .NoteCardDropdown .MiniIconButton:disabled {
-  opacity: 0.85;
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }

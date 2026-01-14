@@ -10,7 +10,7 @@ import TextField from '@mui/material/TextField';
 import { useNotes } from '../../notes/NotesProvider';
 import { NoteEditor } from '../../editor/NoteEditor';
 import { useToast } from '../../ui/ToastProvider';
-import { normalizeHexColor } from '../../ui/useCustomNoteColor';
+import { normalizeHexColor, useCustomNoteColor } from '../../ui/useCustomNoteColor';
 
 export function EditorPane() {
   const {
@@ -37,8 +37,12 @@ export function EditorPane() {
     return colors.find((c) => c.id === raw) || colors[0];
   }, [colors, note]);
 
+  const noteColorClass = useMemo(() => (color.id === 'custom' ? 'is-custom' : `is-${color.id}`), [color.id]);
+  const custom = useCustomNoteColor(note?.id || '', color.id === 'custom' ? color.chip : '');
+
   const [colorOpen, setColorOpen] = useState(false);
   const [hexDraft, setHexDraft] = useState('');
+  const normalizedHexDraft = useMemo(() => normalizeHexColor(hexDraft), [hexDraft]);
   const colorButtonRef = useRef(null);
   const colorMenuRef = useRef(null);
   const [colorMenuReady, setColorMenuReady] = useState(false);
@@ -135,7 +139,7 @@ export function EditorPane() {
 
   return (
     <section
-      className="EditorPane"
+      className={`EditorPane ${noteColorClass}${custom.isCustom ? ` ${custom.className}` : ''}`}
       onMouseDown={() => {
         setColorOpen(false);
       }}
@@ -203,7 +207,6 @@ export function EditorPane() {
                 role="dialog"
                 aria-label="Note color"
                 onMouseDown={(e) => {
-                  e.preventDefault();
                   e.stopPropagation();
                 }}
               >
@@ -238,6 +241,17 @@ export function EditorPane() {
                       className="ColorHexInput"
                       value={hexDraft}
                       onChange={(e) => setHexDraft(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key !== 'Enter') return;
+                        e.preventDefault();
+                        const hex = normalizeHexColor(hexDraft);
+                        if (!hex) {
+                          push('Invalid hex');
+                          return;
+                        }
+                        updateNote(note.id, { colorId: hex });
+                        setColorOpen(false);
+                      }}
                       placeholder="#7C3AED"
                       inputMode="text"
                       spellCheck={false}
@@ -246,6 +260,7 @@ export function EditorPane() {
                     <button
                       className="ColorApplyButton"
                       type="button"
+                      disabled={!normalizedHexDraft}
                       onClick={() => {
                         const hex = normalizeHexColor(hexDraft);
                         if (!hex) {

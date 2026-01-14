@@ -343,7 +343,6 @@ export function NoteCard({ note, highlightQuery = '', selected = false }) {
                   role="dialog"
                   aria-label="Export note"
                   onMouseDown={(e) => {
-                    e.preventDefault();
                     e.stopPropagation();
                   }}
                 >
@@ -445,7 +444,12 @@ export function NoteCard({ note, highlightQuery = '', selected = false }) {
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                deleteNote(note.id);
+                const ok = window.confirm('Delete this note permanently?');
+                if (!ok) return;
+                Promise.resolve(deleteNote(note.id)).catch((err) => {
+                  const msg = err?.message || 'Failed to delete note';
+                  push(msg);
+                });
               }}
               aria-label="Delete note"
               title="Delete"

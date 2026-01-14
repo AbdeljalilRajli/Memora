@@ -274,7 +274,7 @@ export function DashboardPane({ onOpenEditor }) {
               <div className="FolderMenu" aria-hidden="true">…</div>
             </div>
             <div className="FolderCardTitle">All Notes</div>
-            <div className="FolderCardMeta">{notes.length} notes</div>
+            <div className="FolderCardMeta">{allCount} notes</div>
           </div>
 
           <div

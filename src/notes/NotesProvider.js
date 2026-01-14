@@ -61,6 +61,50 @@ function normalizeDbColor(raw) {
   return 'default';
 }
 
+function customColorsStorageKey(userId) {
+  return `listem.notes.customColors.${userId || 'anonymous'}`;
+}
+
+function readCustomColors(userId) {
+  try {
+    const raw = window.localStorage.getItem(customColorsStorageKey(userId));
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object') return {};
+    return parsed;
+  } catch {
+    return {};
+  }
+}
+
+function writeCustomColors(userId, map) {
+  try {
+    window.localStorage.setItem(customColorsStorageKey(userId), JSON.stringify(map || {}));
+  } catch {
+    // ignore
+  }
+}
+
+function setCustomColorForNote(userId, noteId, hex) {
+  const normalized = normalizeHexColor(hex);
+  const map = readCustomColors(userId);
+  if (!normalized) {
+    if (map && Object.prototype.hasOwnProperty.call(map, noteId)) {
+      delete map[noteId];
+      writeCustomColors(userId, map);
+    }
+    return;
+  }
+  map[noteId] = normalized;
+  writeCustomColors(userId, map);
+}
+
+function getCustomColorForNote(userId, noteId) {
+  const map = readCustomColors(userId);
+  const raw = map?.[noteId];
+  return normalizeHexColor(raw);
+}
+
 function extractTextFromJSON(node) {
   if (!node) return '';
   if (typeof node === 'string') return node;
@@ -256,7 +300,13 @@ export function NotesProvider({ userId, children }) {
         console.error('Failed to load notes from Supabase:', notesRes.error);
         setNotes([]);
       } else {
-        setNotes((notesRes.data || []).map(fromDbNote));
+        const base = (notesRes.data || []).map(fromDbNote);
+        const withCustom = base.map((n) => {
+          const customHex = getCustomColorForNote(userId, n.id);
+          if (!customHex) return n;
+          return { ...n, colorId: customHex };
+        });
+        setNotes(withCustom);
       }
 
       if (foldersRes.error) {
@@ -337,7 +387,14 @@ export function NotesProvider({ userId, children }) {
         if (n.id !== id) return n;
         const updated = { ...n, ...patch, updatedAt: now };
         if (Object.prototype.hasOwnProperty.call(patch, 'colorId')) {
-          updated.colorId = normalizeColorId(patch.colorId);
+          const normalized = normalizeColorId(patch.colorId);
+          updated.colorId = normalized;
+          const asHex = normalizeHexColor(normalized);
+          if (asHex) {
+            setCustomColorForNote(userId, id, asHex);
+          } else {
+            setCustomColorForNote(userId, id, '');
+          }
         }
         if (Object.prototype.hasOwnProperty.call(patch, 'folderId')) {
           updated.folderId = patch.folderId || null;
@@ -349,7 +406,7 @@ export function NotesProvider({ userId, children }) {
       dirtyIdsRef.current.add(id);
       setSaveStatus('dirty');
     },
-    []
+    [userId]
   );
 
   const createFolder = useCallback(
@@ -444,7 +501,11 @@ export function NotesProvider({ userId, children }) {
   }, [flushSave]);
 
   const deleteNote = useCallback(
-    (id) => {
+    async (id) => {
+      const snapshot = latestRef.current.notes || [];
+      const removedIndex = snapshot.findIndex((n) => n.id === id);
+      const removedNote = removedIndex >= 0 ? snapshot[removedIndex] : null;
+
       setNotes((prev) => {
         const idx = prev.findIndex((n) => n.id === id);
         if (idx === -1) return prev;
@@ -461,19 +522,26 @@ export function NotesProvider({ userId, children }) {
       });
 
       dirtyIdsRef.current.delete(id);
-      if (userId && userId !== 'anonymous') {
-        supabase
-          .from('notes')
-          .delete()
-          .eq('id', id)
-          .eq('user_id', userId)
-          .then(({ error }) => {
-            if (error) {
-              // eslint-disable-next-line no-console
-              console.error('Failed to delete note from Supabase:', error);
-            }
-          });
+
+      setCustomColorForNote(userId, id, '');
+      if (!userId || userId === 'anonymous') return;
+
+      const { error } = await supabase.from('notes').delete().eq('id', id).eq('user_id', userId);
+      if (!error) return;
+
+      if (removedNote) {
+        setNotes((prev) => {
+          if (prev.some((n) => n.id === id)) return prev;
+          const next = [...prev];
+          const insertAt = Math.max(0, Math.min(removedIndex, next.length));
+          next.splice(insertAt, 0, removedNote);
+          return next;
+        });
       }
+
+      // eslint-disable-next-line no-console
+      console.error('Failed to delete note from Supabase:', error);
+      throw error;
     },
     [userId]
   );
