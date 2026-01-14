@@ -6,8 +6,8 @@ export function TopNav({ userEmail, onLogout, loggingOut }) {
     <header className="TopNav">
       <div className="TopNavLeft">
         <Link to="/" className="Brand BrandLink" aria-label="Back to home">
-          <div className="BrandMark">L</div>
-          <div className="BrandName">Listem Notes</div>
+          <div className="BrandMark">M</div>
+          <div className="BrandName">Memora</div>
         </Link>
       </div>
 

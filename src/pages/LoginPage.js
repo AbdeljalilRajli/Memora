@@ -52,7 +52,7 @@ export default function LoginPage() {
           ← Back to home
         </Link>
         <div className="AuthHeader">
-          <div className="AuthTitle">Listem Notes</div>
+          <div className="AuthTitle">Memora</div>
           <div className="AuthSubtitle">Sign in to your workspace</div>
         </div>
 

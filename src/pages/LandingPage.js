@@ -8,8 +8,8 @@ export default function LandingPage() {
     <div className="TemplateLanding animate-in fade-in duration-700">
       <nav className="fixed top-0 w-full z-[100] h-20 bg-white/80 backdrop-blur-md px-8 md:px-20 flex items-center justify-between border-b border-gray-100">
         <Link to="/" className="Brand tl-brand">
-          <div className="BrandMark tl-brand-mark">L</div>
-          <div className="BrandName text-lg font-extrabold tracking-tight text-gray-900">Listem Notes</div>
+          <div className="BrandMark tl-brand-mark">M</div>
+          <div className="BrandName text-lg font-extrabold tracking-tight text-gray-900">Memora</div>
         </Link>
 
         <div className="hidden md:flex items-center gap-8 text-sm font-semibold text-gray-600">
@@ -36,9 +36,9 @@ export default function LandingPage() {
         <div className="max-w-4xl mx-auto text-center">
           <div className="flex flex-col items-center justify-center mb-10 animate-in slide-in-from-top-2 duration-700">
             <div className="tl-hero-logo" aria-hidden="true">
-              <div className="BrandMark tl-brand-mark">L</div>
+              <div className="BrandMark tl-brand-mark">M</div>
             </div>
-            <div className="mt-3 text-sm font-bold uppercase tracking-[0.35em] text-gray-500">Listem Notes</div>
+            <div className="mt-3 text-sm font-bold uppercase tracking-[0.35em] text-gray-500">Memora</div>
           </div>
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-50 text-[10px] font-bold uppercase tracking-widest text-indigo-600 mb-8">
             New features ✨ Read more ➔
@@ -47,7 +47,7 @@ export default function LandingPage() {
             Ideas captured <br /> Creativity <span className="text-indigo-600 italic">unleashed.</span>
           </h1>
           <p className="text-lg text-gray-500 max-w-xl mx-auto mb-10 leading-relaxed font-medium">
-            With Listem, gather, organize, and prioritize your notes effortlessly. Streamline your thoughts and stay organized with ease.
+            With Memora, gather, organize, and prioritize your notes effortlessly. Streamline your thoughts and stay organized with ease.
           </p>
           <Link
             to="/signup"
@@ -111,7 +111,7 @@ export default function LandingPage() {
       <section id="features" className="py-32 px-6">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-24">
-            <h5 className="text-[10px] font-bold text-indigo-600 uppercase tracking-[0.4em] mb-4">Listem Features</h5>
+            <h5 className="text-[10px] font-bold text-indigo-600 uppercase tracking-[0.4em] mb-4">Memora Features</h5>
             <h2 className="text-5xl font-extrabold mb-6">See All Features</h2>
             <p className="text-gray-500 max-w-xl mx-auto leading-relaxed">
               Embark on a journey of discovery through a comprehensive array of features, meticulously crafted to elevate your note-taking experience.
@@ -122,7 +122,7 @@ export default function LandingPage() {
             {[
               {
                 title: 'Super Fast',
-                body: 'Capture ideas instantly. Listem keeps up with your pace for efficient note-taking.',
+                body: 'Capture ideas instantly. Memora keeps up with your pace for efficient note-taking.',
                 icon: '⚡',
               },
               {
@@ -166,7 +166,7 @@ export default function LandingPage() {
               </span>
               <h2 className="text-4xl font-extrabold mb-6 leading-tight">Notion-like Editor</h2>
               <p className="text-gray-500 mb-8 leading-relaxed">
-                Level up your note-taking with Listem’s notion-like editor. Enjoy a user-friendly interface and customizable formatting options for effortless organization.
+                Level up your note-taking with Memora’s notion-like editor. Enjoy a user-friendly interface and customizable formatting options for effortless organization.
               </p>
               <Link to="/app" className="btn-black px-8 py-3 rounded-lg font-bold flex items-center gap-3 w-fit">
                 Try it now ➔
@@ -214,19 +214,19 @@ export default function LandingPage() {
                 name: 'Emily Watson',
                 role: 'Mobile dev',
                 quote:
-                  'Listem is awesome! It’s easy to use and helps me stay organized. I use it for everything from shopping lists to work notes.',
+                  'Memora is awesome! It’s easy to use and helps me stay organized. I use it for everything from shopping lists to work notes.',
               },
               {
                 name: 'Jacob Lee',
                 role: 'Developer',
                 quote:
-                  'Listem is simply amazing. The design is clean, and the app is very user-friendly. I use it daily.',
+                  'Memora is simply amazing. The design is clean, and the app is very user-friendly. I use it daily.',
               },
               {
                 name: 'Mia Garcia',
                 role: 'Student',
                 quote:
-                  'Listem has been a lifesaver for my studies. I can organize my notes easily and access them whenever I need to.',
+                  'Memora has been a lifesaver for my studies. I can organize my notes easily and access them whenever I need to.',
               },
             ].map((review, i) => (
               <div key={i} className="bg-white p-10 rounded-3xl border border-gray-100 shadow-sm">
@@ -254,18 +254,18 @@ export default function LandingPage() {
             {[
               {
                 q: 'Can I access my notes from multiple devices?',
-                a: 'Yes, you can access your notes from any device with an internet connection by logging into your Listem account.',
+                a: 'Yes, you can access your notes from any device with an internet connection by logging into your Memora account.',
               },
               {
                 q: 'Is there a limit to the number of notes I can create?',
-                a: 'No, Listem allows you to create as many notes as you need without any restrictions.',
+                a: 'No, Memora allows you to create as many notes as you need without any restrictions.',
               },
               {
                 q: 'Can I share my notes with others?',
                 a: 'Absolutely. You can generate a shareable link for any note in seconds.',
               },
               {
-                q: 'Does Listem support markdown formatting?',
+                q: 'Does Memora support markdown formatting?',
                 a: 'Yes, our editor supports standard markdown and block-based formatting.',
               },
             ].map((faq, i) => (
@@ -299,8 +299,8 @@ export default function LandingPage() {
       <footer className="py-12 border-t border-gray-100 bg-white px-8 md:px-20">
         <div className="flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-2">
-            <div className="BrandMark tl-brand-mark">L</div>
-            <span className="font-bold text-gray-500">© {new Date().getFullYear()} Listem</span>
+            <div className="BrandMark tl-brand-mark">M</div>
+            <span className="font-bold text-gray-500">© {new Date().getFullYear()} Memora</span>
           </div>
           <div className="text-xs text-gray-400 font-medium">Terms of Use</div>
         </div>

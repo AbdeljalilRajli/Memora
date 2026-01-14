@@ -495,7 +495,7 @@ function MockDashboard({ compact = false }) {
           <span className="h-2.5 w-2.5 rounded-full" style={{ background: 'rgb(var(--lp-accent-tertiary-rgb) / 0.76)' }} />
         </div>
         <div className="text-xs font-extrabold tracking-tight" style={{ color: 'var(--lp-text)' }}>
-          Listem Notes
+          Memora
         </div>
       </div>
 
@@ -751,9 +751,9 @@ export default function LandingPageNew() {
                 boxShadow: '0 18px 50px rgb(var(--lp-accent-primary-rgb) / 0.28)',
               }}
             >
-              L
+              M
             </span>
-            <span>Listem Notes</span>
+            <span>Memora</span>
           </Link>
 
           <nav className="hidden items-center gap-8 text-sm font-semibold md:flex" aria-label="Primary">
@@ -901,7 +901,7 @@ export default function LandingPageNew() {
                 animate={reduceMotion ? undefined : { y: [0, -10, 0] }}
                 transition={reduceMotion ? undefined : { duration: 7.5, ease: 'easeInOut', repeat: Infinity }}
               >
-                <ScreenshotFrame title="Dashboard" src="/dashboard.png" alt="Listem dashboard" />
+                <ScreenshotFrame title="Dashboard" src="/dashboard.png" alt="Memora dashboard" />
               </motion.div>
 
               <div
@@ -1117,7 +1117,7 @@ export default function LandingPageNew() {
                         opacity: 0.75,
                       }}
                     />
-                    <ScreenshotFrame title="Listem Notes" src="/dashboard.png" alt="Listem dashboard" />
+                    <ScreenshotFrame title="Memora" src="/dashboard.png" alt="Memora dashboard" />
                   </div>
                 </motion.div>
               </div>
@@ -1282,7 +1282,7 @@ export default function LandingPageNew() {
                   Want something customized?
                 </h2>
                 <p className="mt-3 max-w-prose text-sm leading-relaxed sm:text-base" style={{ color: 'var(--lp-text-secondary)' }}>
-                  Tell us what you need Listem to become. We’ll prioritize the roadmap.
+                  Tell us what you need Memora to become. We’ll prioritize the roadmap.
                 </p>
               </div>
 
@@ -1369,12 +1369,12 @@ export default function LandingPageNew() {
               className="grid h-9 w-9 place-items-center rounded-[14px] text-white"
               style={{ background: 'linear-gradient(135deg, var(--lp-accent-primary), var(--lp-accent-secondary))' }}
             >
-              L
+              M
             </span>
             <div>
-              <div className="text-sm font-black">Listem Notes</div>
+              <div className="text-sm font-black">Memora</div>
               <div className="mt-1 text-xs font-bold" style={{ color: 'var(--lp-text-muted)' }}>
-                © {new Date().getFullYear()} Listem
+                © {new Date().getFullYear()} Memora
               </div>
             </div>
           </div>

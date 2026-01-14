@@ -16,7 +16,7 @@ export async function askNoteAssistant(prompt: string): Promise<string> {
     model: 'gemini-3-flash-preview',
     contents: prompt,
     config: {
-      systemInstruction: `You are Listem AI, a helpful assistant integrated into a modern note-taking app. 
+      systemInstruction: `You are Memora AI, a helpful assistant integrated into a modern note-taking app. 
       You specialize in summarizing notes, brainstorming ideas, and organizing chaotic thoughts into clear lists or paragraphs.
       Keep responses concise and professional.`,
     },

@@ -85,8 +85,8 @@ export default function SharedNotePage() {
       <div className="SharedNoteShell">
         <div className="SharedNoteTop">
           <Link to="/" className="Brand">
-            <div className="BrandMark">L</div>
-            <div className="BrandName">Listem Notes</div>
+            <div className="BrandMark">M</div>
+            <div className="BrandName">Memora</div>
           </Link>
         </div>
         <div className="SharedNoteCenter">Loading…</div>
@@ -99,8 +99,8 @@ export default function SharedNotePage() {
       <div className="SharedNoteShell">
         <div className="SharedNoteTop">
           <Link to="/" className="Brand">
-            <div className="BrandMark">L</div>
-            <div className="BrandName">Listem Notes</div>
+            <div className="BrandMark">M</div>
+            <div className="BrandName">Memora</div>
           </Link>
         </div>
         <div className="SharedNoteCenter">{error}</div>
@@ -113,8 +113,8 @@ export default function SharedNotePage() {
       <div className="SharedNoteShell">
         <div className="SharedNoteTop">
           <Link to="/" className="Brand">
-            <div className="BrandMark">L</div>
-            <div className="BrandName">Listem Notes</div>
+            <div className="BrandMark">M</div>
+            <div className="BrandName">Memora</div>
           </Link>
         </div>
         <div className="SharedNoteCenter">Share link not found.</div>
@@ -127,8 +127,8 @@ export default function SharedNotePage() {
       <div className="SharedNoteShell">
         <div className="SharedNoteTop">
           <Link to="/" className="Brand">
-            <div className="BrandMark">L</div>
-            <div className="BrandName">Listem Notes</div>
+            <div className="BrandMark">M</div>
+            <div className="BrandName">Memora</div>
           </Link>
         </div>
         <div className="SharedNoteCenter">This share link has been revoked.</div>
@@ -140,8 +140,8 @@ export default function SharedNotePage() {
     <div className={`SharedNoteShell ${noteColorClass}${custom.isCustom ? ` ${custom.className}` : ''}`}>
       <div className="SharedNoteTop">
         <Link to="/" className="Brand">
-          <div className="BrandMark">L</div>
-          <div className="BrandName">Listem Notes</div>
+          <div className="BrandMark">M</div>
+          <div className="BrandName">Memora</div>
         </Link>
 
         <div className="SharedNoteActions">
