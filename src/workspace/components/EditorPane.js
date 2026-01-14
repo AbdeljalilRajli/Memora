@@ -158,12 +158,28 @@ export function EditorPane() {
                 }}
                 sx={{
                   borderRadius: 999,
+                  px: 1.5,
+                  py: 0.65,
                   textTransform: 'none',
                   fontWeight: 800,
                   borderColor: 'rgba(30,30,30,0.18)',
                   color: 'rgba(30,30,30,0.92)',
                   backgroundColor: 'rgba(255,255,255,0.92)',
-                  '&:hover': { borderColor: 'rgba(30,30,30,0.26)', backgroundColor: 'rgba(255,255,255,1)' },
+                  boxShadow: '0 10px 22px rgba(15, 23, 42, 0.06)',
+                  '&:hover': {
+                    borderColor: 'rgba(30,30,30,0.26)',
+                    backgroundColor: 'rgba(255,255,255,1)',
+                    boxShadow: '0 14px 28px rgba(15, 23, 42, 0.10)',
+                    transform: 'translateY(-1px)',
+                  },
+                  '&:active': {
+                    transform: 'translateY(0)',
+                    boxShadow: '0 10px 22px rgba(15, 23, 42, 0.06)',
+                  },
+                  '&.Mui-focusVisible': {
+                    outline: 'none',
+                    boxShadow: '0 0 0 4px rgba(249, 110, 91, 0.22), 0 14px 28px rgba(15, 23, 42, 0.10)',
+                  },
                 }}
               >
                 <span className={color?.id === 'custom' ? 'ColorChip is-custom' : `ColorChip is-${color?.id}`} aria-hidden="true" style={{ marginRight: 10 }} />
@@ -183,8 +199,20 @@ export function EditorPane() {
                     borderRadius: 999,
                     fontWeight: 850,
                     backgroundColor: 'rgba(255,255,255,0.92)',
+                    boxShadow: '0 10px 22px rgba(15, 23, 42, 0.06)',
+                    '& .MuiSelect-select': { py: 0.65 },
                     '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(30,30,30,0.18)' },
                     '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(30,30,30,0.26)' },
+                    '&:hover': {
+                      backgroundColor: 'rgba(255,255,255,1)',
+                      boxShadow: '0 14px 28px rgba(15, 23, 42, 0.10)',
+                      transform: 'translateY(-1px)',
+                    },
+                    '&.Mui-focused': {
+                      transform: 'translateY(0)',
+                      boxShadow: '0 0 0 4px rgba(249, 110, 91, 0.22), 0 14px 28px rgba(15, 23, 42, 0.10)',
+                      '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(249, 110, 91, 0.55)' },
+                    },
                   }}
                 >
                   <MenuItem value="">No folder</MenuItem>
