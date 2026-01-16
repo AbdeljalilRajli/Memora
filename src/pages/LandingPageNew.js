@@ -46,6 +46,26 @@ function FeatureIcon({ children }) {
   );
 }
 
+function BentoCard({ children, className = '', style }) {
+  const reduceMotion = useReducedMotion();
+
+  return (
+    <motion.div
+      whileHover={reduceMotion ? undefined : { y: -2 }}
+      transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+      className={`relative overflow-hidden rounded-[28px] border ${className}`}
+      style={{
+        borderColor: 'var(--lp-border)',
+        background: 'var(--lp-surface-strong)',
+        boxShadow: 'var(--lp-shadow)',
+        ...style,
+      }}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
 function MockFrame({ title, children }) {
   return (
     <div
@@ -882,6 +902,23 @@ export default function LandingPageNew() {
                   Loved by creators, developers, and thinkers
                 </div>
               </motion.div>
+
+              <motion.div variants={heroLine} className="mt-6">
+                <div className="text-[11px] font-extrabold uppercase tracking-[0.24em]" style={{ color: 'var(--lp-text-muted)' }}>
+                  Trusted by
+                </div>
+                <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                  {['Product teams', 'Indie makers', 'Students', 'Developers', 'Researchers', 'Freelancers'].map((label) => (
+                    <div
+                      key={label}
+                      className="rounded-[16px] border px-4 py-3 text-sm font-extrabold"
+                      style={{ borderColor: 'var(--lp-border)', background: 'var(--lp-surface)', color: 'var(--lp-text-secondary)' }}
+                    >
+                      {label}
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
             </motion.div>
 
             <motion.div style={{ y: reduceMotion ? 0 : mockupY, rotate: reduceMotion ? 0 : mockupRotate }} className="relative">
@@ -974,65 +1011,145 @@ export default function LandingPageNew() {
                 Features
               </div>
               <h2 className="mt-3 text-3xl font-black tracking-tight sm:text-4xl" style={{ letterSpacing: '-0.03em' }}>
-                Everything you need to stay in flow.
+                Built to keep you in flow.
               </h2>
+              <p className="mt-3 max-w-prose text-sm leading-relaxed sm:text-base" style={{ color: 'var(--lp-text-secondary)' }}>
+                A writing-first editor, quick navigation, and just enough structure to keep your week clear.
+              </p>
             </div>
           </FadeIn>
 
-          <div className="mt-10 grid gap-6 lg:grid-cols-12">
-            <FadeIn className="lg:col-span-7">
-              <div
-                className="relative overflow-hidden rounded-[28px] border p-6 sm:p-8"
+          <div className="mt-10 grid gap-4 lg:grid-cols-12 lg:items-start">
+            <FadeIn className="lg:col-span-7 lg:sticky lg:top-24 self-start">
+              <BentoCard
+                className="p-6 sm:p-8"
                 style={{
-                  borderColor: 'var(--lp-border)',
                   background:
                     'radial-gradient(940px 560px at 18% 18%, rgb(var(--lp-accent-primary-rgb) / 0.18), transparent 62%), radial-gradient(900px 560px at 82% 10%, rgb(var(--lp-accent-secondary-rgb) / 0.14), transparent 62%), var(--lp-surface-tint)',
-                  boxShadow: 'var(--lp-shadow)',
                 }}
               >
-                <div className="text-[11px] font-extrabold uppercase tracking-[0.24em]" style={{ color: 'var(--lp-text-muted)' }}>
-                  Preview
-                </div>
-                <div className="mt-2 text-xl font-black tracking-tight" style={{ letterSpacing: '-0.02em' }}>
-                  A calm dashboard that stays out of your way.
-                </div>
-                <div className="mt-3 text-sm font-bold leading-relaxed" style={{ color: 'var(--lp-text-secondary)' }}>
-                  Organized notes, quick actions, and a writing-first flow — built for everyday use.
+                <div className="flex items-start justify-between gap-6">
+                  <div>
+                    <div className="text-[11px] font-extrabold uppercase tracking-[0.24em]" style={{ color: 'var(--lp-text-muted)' }}>
+                      Editor
+                    </div>
+                    <div className="mt-2 text-xl font-black tracking-tight" style={{ letterSpacing: '-0.02em' }}>
+                      Write like you mean it.
+                    </div>
+                    <div className="mt-3 text-sm font-bold leading-relaxed" style={{ color: 'var(--lp-text-secondary)' }}>
+                      Blocks, checklists, links — with a clean default that keeps your attention on the words.
+                    </div>
+                  </div>
+                  <div className="hidden sm:block">
+                    <FeatureIcon>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M7 7h10M7 12h7M7 17h10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                      </svg>
+                    </FeatureIcon>
+                  </div>
                 </div>
 
                 <div className="mt-6">
-                  <MockDashboard compact />
+                  <MockEditor />
                 </div>
-              </div>
+              </BentoCard>
             </FadeIn>
 
             <div className="grid gap-4 sm:grid-cols-2 lg:col-span-5 lg:grid-cols-1">
-              {features.map((f, idx) => (
-                <FadeIn key={f.title} delay={idx * 0.03}>
-                  <motion.div
-                    whileHover={reduceMotion ? undefined : { y: -2 }}
-                    transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
-                    className="rounded-[22px] border p-5"
-                    style={{
-                      borderColor: 'var(--lp-border)',
-                      background: 'var(--lp-surface-strong)',
-                      boxShadow: 'var(--lp-shadow)',
-                    }}
-                  >
-                    <div className="flex items-start gap-4">
-                      <FeatureIcon>{f.icon}</FeatureIcon>
-                      <div>
-                        <div className="text-base font-black tracking-tight" style={{ letterSpacing: '-0.02em' }}>
-                          {f.title}
-                        </div>
-                        <div className="mt-1 text-sm leading-relaxed" style={{ color: 'var(--lp-text-secondary)' }}>
-                          {f.desc}
-                        </div>
+              <FadeIn>
+                <BentoCard className="p-5" style={{ background: 'var(--lp-surface-strong)' }}>
+                  <div className="flex items-start gap-4">
+                    <FeatureIcon>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M10 18a8 8 0 1 1 5.3-14.1A8 8 0 0 1 10 18Z" stroke="currentColor" strokeWidth="2" />
+                        <path d="m21 21-4.3-4.3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                      </svg>
+                    </FeatureIcon>
+                    <div>
+                      <div className="text-base font-black tracking-tight" style={{ letterSpacing: '-0.02em' }}>
+                        Find anything instantly
+                      </div>
+                      <div className="mt-1 text-sm leading-relaxed" style={{ color: 'var(--lp-text-secondary)' }}>
+                        Search titles, text, and ideas without switching contexts.
                       </div>
                     </div>
-                  </motion.div>
-                </FadeIn>
-              ))}
+                  </div>
+                  <div className="mt-5">
+                    <MockSearch />
+                  </div>
+                </BentoCard>
+              </FadeIn>
+
+              <FadeIn delay={0.05}>
+                <BentoCard className="p-5" style={{ background: 'var(--lp-surface-strong)' }}>
+                  <div className="flex items-start gap-4">
+                    <FeatureIcon>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M12 6v6l4 2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        <path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" stroke="currentColor" strokeWidth="2" />
+                      </svg>
+                    </FeatureIcon>
+                    <div>
+                      <div className="text-base font-black tracking-tight" style={{ letterSpacing: '-0.02em' }}>
+                        Autosave, always
+                      </div>
+                      <div className="mt-1 text-sm leading-relaxed" style={{ color: 'var(--lp-text-secondary)' }}>
+                        No manual saving. Your momentum stays uninterrupted.
+                      </div>
+                    </div>
+                  </div>
+                  <div className="mt-5">
+                    <MockAutosave />
+                  </div>
+                </BentoCard>
+              </FadeIn>
+
+              <FadeIn delay={0.1}>
+                <BentoCard className="p-5 sm:col-span-2 lg:col-span-1" style={{ background: 'var(--lp-surface-strong)' }}>
+                  <div className="flex items-start gap-4">
+                    <FeatureIcon>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M12 3v6m0 12v-6M3 12h6m12 0h-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                      </svg>
+                    </FeatureIcon>
+                    <div>
+                      <div className="text-base font-black tracking-tight" style={{ letterSpacing: '-0.02em' }}>
+                        Color that helps you think
+                      </div>
+                      <div className="mt-1 text-sm leading-relaxed" style={{ color: 'var(--lp-text-secondary)' }}>
+                        A subtle system to separate projects, moods, and priorities.
+                      </div>
+                    </div>
+                  </div>
+                  <div className="mt-5">
+                    <MockColors />
+                  </div>
+                </BentoCard>
+              </FadeIn>
+
+              <FadeIn delay={0.12}>
+                <BentoCard className="p-5 sm:col-span-2 lg:col-span-1" style={{ background: 'var(--lp-surface-strong)' }}>
+                  <div className="flex items-start gap-4">
+                    <FeatureIcon>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M9 12a3 3 0 0 1 3-3h7a3 3 0 0 1 0 6h-2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                        <path d="M15 12a3 3 0 0 1-3 3H5a3 3 0 1 1 0-6h2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                      </svg>
+                    </FeatureIcon>
+                    <div>
+                      <div className="text-base font-black tracking-tight" style={{ letterSpacing: '-0.02em' }}>
+                        Share with a link
+                      </div>
+                      <div className="mt-1 text-sm leading-relaxed" style={{ color: 'var(--lp-text-secondary)' }}>
+                        Send when needed. Keep everything else private.
+                      </div>
+                    </div>
+                  </div>
+                  <div className="mt-5">
+                    <MockSharing />
+                  </div>
+                </BentoCard>
+              </FadeIn>
             </div>
           </div>
         </Section>

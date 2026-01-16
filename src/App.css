@@ -19,6 +19,20 @@ html, body, #root {
   height: 100%;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+.LandingPageNew section[id] {
+  scroll-margin-top: 88px;
+}
+
 :root.theme-light {
   --bg-main: #FFE2AF;
   --bg-surface: #FFFFFF;
@@ -49,10 +63,14 @@ html, body, #root {
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   --primary: var(--accent-primary);
   --primary-2: rgba(249, 110, 91, 0.14);
+  --primary-rgb: 249 110 91;
+  --primary-2-rgb: 255 152 106;
 
   --chip: rgba(15, 23, 42, 0.08);
   --note-bg: rgba(255, 255, 255, 0.92);
   --editor-code-bg: rgba(15, 23, 42, 0.06);
+
+  --surface-tint: rgba(255, 255, 255, 0.82);
 
   --note-cream: #FFF1C7;
   --note-sun: #FFB703;
@@ -141,6 +159,8 @@ html, body, #root {
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   --primary: var(--accent-primary);
   --primary-2: rgba(249, 110, 91, 0.18);
+  --primary-rgb: 249 110 91;
+  --primary-2-rgb: 255 152 106;
 
   --chip: rgba(30, 30, 30, 0.08);
 
@@ -166,6 +186,8 @@ html, body, #root {
 
   --note-bg: rgba(255, 255, 255, 0.92);
   --editor-code-bg: rgba(30, 30, 30, 0.06);
+
+  --surface-tint: rgba(255, 255, 255, 0.82);
 
   /* Legacy aliases (so older CSS selectors don’t break while we migrate) */
   --note-mist: var(--note-cream);
@@ -226,6 +248,14 @@ textarea,
     box-shadow 180ms var(--ease-out), transform 180ms var(--ease-out);
 }
 
+a {
+  color: inherit;
+}
+
+a:visited {
+  color: inherit;
+}
+
 .App {
   height: 100%;
 }
@@ -236,6 +266,19 @@ textarea,
 
 .LandingPageNew a:hover {
   text-decoration: none;
+}
+
+.LandingPageNew header nav a:hover,
+.LandingPageNew footer a:hover {
+  color: var(--lp-text);
+}
+
+.LandingPageNew header nav a:focus-visible,
+.LandingPageNew footer a:focus-visible {
+  outline: none;
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
 }
 
 .AuthLoading {
