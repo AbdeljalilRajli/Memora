@@ -103,9 +103,9 @@ html {
   --chip-slate: var(--chip-white);
   --chip-sage: var(--chip-cream);
 
-  --lp-bg: #FFE2AF;
-  --lp-bg-1: color-mix(in srgb, var(--lp-bg) 70%, #ffffff 30%);
-  --lp-bg-2: color-mix(in srgb, var(--lp-bg) 52%, #ffffff 48%);
+  --lp-bg: #F6F7FB;
+  --lp-bg-1: color-mix(in srgb, var(--lp-bg) 92%, #E2E8F0 8%);
+  --lp-bg-2: color-mix(in srgb, var(--lp-bg) 88%, #FFFFFF 12%);
   --lp-surface: rgba(255, 255, 255, 0.70);
   --lp-surface-strong: var(--bg-surface);
   --lp-surface-tint: rgba(255, 255, 255, 0.82);
@@ -201,9 +201,9 @@ html {
   --chip-slate: var(--chip-white);
   --chip-sage: var(--chip-cream);
 
-  --lp-bg: #FFE2AF;
-  --lp-bg-1: color-mix(in srgb, var(--lp-bg) 70%, #ffffff 30%);
-  --lp-bg-2: color-mix(in srgb, var(--lp-bg) 52%, #ffffff 48%);
+  --lp-bg: #F4F6FA;
+  --lp-bg-1: color-mix(in srgb, var(--lp-bg) 92%, #E2E8F0 8%);
+  --lp-bg-2: color-mix(in srgb, var(--lp-bg) 88%, #FFFFFF 12%);
   --lp-surface: var(--surface);
   --lp-surface-strong: var(--surface-strong);
   --lp-surface-tint: var(--surface-tint);

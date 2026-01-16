@@ -902,23 +902,6 @@ export default function LandingPageNew() {
                   Loved by creators, developers, and thinkers
                 </div>
               </motion.div>
-
-              <motion.div variants={heroLine} className="mt-6">
-                <div className="text-[11px] font-extrabold uppercase tracking-[0.24em]" style={{ color: 'var(--lp-text-muted)' }}>
-                  Trusted by
-                </div>
-                <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
-                  {['Product teams', 'Indie makers', 'Students', 'Developers', 'Researchers', 'Freelancers'].map((label) => (
-                    <div
-                      key={label}
-                      className="rounded-[16px] border px-4 py-3 text-sm font-extrabold"
-                      style={{ borderColor: 'var(--lp-border)', background: 'var(--lp-surface)', color: 'var(--lp-text-secondary)' }}
-                    >
-                      {label}
-                    </div>
-                  ))}
-                </div>
-              </motion.div>
             </motion.div>
 
             <motion.div style={{ y: reduceMotion ? 0 : mockupY, rotate: reduceMotion ? 0 : mockupRotate }} className="relative">
@@ -1254,7 +1237,7 @@ export default function LandingPageNew() {
             </div>
           </FadeIn>
 
-          <div className="mt-10 grid gap-4 lg:grid-cols-3">
+          <div className="mt-10 grid items-stretch gap-4 lg:grid-cols-3">
             {[
               {
                 name: 'Nadia B.',
@@ -1275,7 +1258,7 @@ export default function LandingPageNew() {
               <FadeIn key={t.name} delay={i * 0.05}>
                 <motion.div
                   whileHover={reduceMotion ? undefined : { y: -2 }}
-                  className="rounded-[22px] border p-6"
+                  className="flex h-full flex-col rounded-[22px] border p-6"
                   style={{ borderColor: 'var(--lp-border)', background: 'var(--lp-surface-tint)', boxShadow: 'var(--lp-shadow)' }}
                 >
                   <div className="text-sm font-bold leading-relaxed" style={{ color: 'var(--lp-text-secondary)' }}>
@@ -1305,7 +1288,7 @@ export default function LandingPageNew() {
                       ”
                     </span>
                   </div>
-                  <div className="mt-6 flex items-center justify-between">
+                  <div className="mt-auto flex items-center justify-between pt-6">
                     <div>
                       <div className="text-sm font-black" style={{ color: 'var(--lp-text)' }}>
                         {t.name}
