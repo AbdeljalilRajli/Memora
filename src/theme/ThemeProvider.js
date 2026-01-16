@@ -17,22 +17,20 @@ export function ThemeProvider({ children }) {
     return 'dark';
   });
 
-  const theme = useMemo(() => 'dark', [mode]);
+  const theme = useMemo(() => resolveTheme(mode), [mode]);
 
   useEffect(() => {
     const root = document.documentElement;
     root.classList.remove('theme-light', 'theme-dark');
-    root.classList.add('theme-dark');
+    root.classList.add(theme === 'dark' ? 'theme-dark' : 'theme-light');
   }, [theme]);
-
-  useEffect(() => {}, [mode]);
 
   const value = useMemo(
     () => ({
       mode,
       theme,
-      setMode: () => {},
-      toggleTheme: () => {},
+      setMode,
+      toggleTheme: () => setMode((prev) => (resolveTheme(prev) === 'dark' ? 'light' : 'dark')),
     }),
     [mode, theme]
   );
