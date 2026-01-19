@@ -1,4 +1,6 @@
 -- Create the note_shares table for public note sharing
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
 CREATE TABLE IF NOT EXISTS public.note_shares (
   share_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   note_id UUID NOT NULL REFERENCES public.notes(id) ON DELETE CASCADE,
@@ -12,27 +14,31 @@ CREATE TABLE IF NOT EXISTS public.note_shares (
 );
 
 -- Add indexes for performance
-CREATE INDEX idx_note_shares_note_id ON public.note_shares(note_id);
-CREATE INDEX idx_note_shares_user_id ON public.note_shares(user_id);
-CREATE INDEX idx_note_shares_share_id_revoked ON public.note_shares(share_id, revoked);
+CREATE INDEX IF NOT EXISTS idx_note_shares_note_id ON public.note_shares(note_id);
+CREATE INDEX IF NOT EXISTS idx_note_shares_user_id ON public.note_shares(user_id);
+CREATE INDEX IF NOT EXISTS idx_note_shares_share_id_revoked ON public.note_shares(share_id, revoked);
 
 -- Enable RLS
 ALTER TABLE public.note_shares ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies for note_shares
 -- 1. Users can view their own shares
+DROP POLICY IF EXISTS "Users can view their own note shares" ON public.note_shares;
 CREATE POLICY "Users can view their own note shares" ON public.note_shares
   FOR SELECT USING (auth.uid() = user_id);
 
 -- 2. Users can insert their own shares
+DROP POLICY IF EXISTS "Users can create their own note shares" ON public.note_shares;
 CREATE POLICY "Users can create their own note shares" ON public.note_shares
   FOR INSERT WITH CHECK (auth.uid() = user_id);
 
 -- 3. Users can update their own shares
+DROP POLICY IF EXISTS "Users can update their own note shares" ON public.note_shares;
 CREATE POLICY "Users can update their own note shares" ON public.note_shares
   FOR UPDATE USING (auth.uid() = user_id);
 
 -- 4. Users can delete their own shares
+DROP POLICY IF EXISTS "Users can delete their own note shares" ON public.note_shares;
 CREATE POLICY "Users can delete their own note shares" ON public.note_shares
   FOR DELETE USING (auth.uid() = user_id);
 
@@ -89,6 +95,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS handle_note_shares_updated_at ON public.note_shares;
 CREATE TRIGGER handle_note_shares_updated_at
   BEFORE UPDATE ON public.note_shares
   FOR EACH ROW

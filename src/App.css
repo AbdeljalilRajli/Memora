@@ -1256,6 +1256,120 @@ a:visited {
   background: var(--note-card-bg, var(--surface));
 }
 
+.SharedNoteShell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.SharedNoteShell::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(circle at 1px 1px, rgba(30, 30, 30, 0.08) 1px, transparent 0);
+  background-size: 22px 22px;
+  opacity: 0.22;
+}
+
+.SharedNoteTop {
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: rgba(255, 255, 255, 0.60);
+  border-bottom: 1px solid rgba(15, 23, 42, 0.10);
+  backdrop-filter: blur(12px);
+}
+
+:root.theme-dark .SharedNoteTop {
+  background: rgba(255, 255, 255, 0.78);
+  border-bottom-color: rgba(15, 23, 42, 0.12);
+}
+
+.SharedNoteMain {
+  flex: 1;
+  min-height: 0;
+  padding: 34px 16px 64px;
+  display: flex;
+  justify-content: center;
+}
+
+.SharedNoteDoc {
+  width: 100%;
+  max-width: 920px;
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: 0 26px 80px rgba(15, 23, 42, 0.12);
+  backdrop-filter: blur(12px);
+}
+
+@media (max-width: 520px) {
+  .SharedNoteMain {
+    padding: 18px 12px 44px;
+  }
+  .SharedNoteDoc {
+    border-radius: 18px;
+    padding: 16px;
+  }
+}
+
+.SharedNoteTitle {
+  font-weight: 950;
+  letter-spacing: -0.04em;
+  font-size: 2.1rem;
+  line-height: 1.06;
+  margin-bottom: 14px;
+}
+
+@media (max-width: 520px) {
+  .SharedNoteTitle {
+    font-size: 1.7rem;
+  }
+}
+
+.SharedNoteCenter {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 28px 16px;
+  color: rgba(15, 23, 42, 0.72);
+  font-weight: 750;
+}
+
+.SharedNoteActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.SharedNoteActions .MiniIconButton {
+  width: auto;
+  padding: 0 12px;
+  border-radius: 12px;
+  font-weight: 900;
+  letter-spacing: -0.01em;
+}
+
+.SharedNoteDoc .ListemEditor {
+  min-height: 0;
+  padding: 0;
+  border-top: none;
+}
+
+.SharedNoteDoc .ProseMirror {
+  font-size: 1rem;
+  line-height: 1.7;
+}
+
 .SharedNoteShell.is-mist {
   background: var(--note-mist);
 }
@@ -1273,7 +1387,7 @@ a:visited {
 }
 
 .SharedNoteShell.is-lavender {
-  background: var(--note-lavender);
+  background: var(--note-lavenderbrand);
 }
 
 .SharedNoteShell.is-custom {
@@ -1284,6 +1398,9 @@ a:visited {
 .SharedNoteShell.is-sun { background: var(--note-sun); }
 .SharedNoteShell.is-pink { background: var(--note-pink); }
 .SharedNoteShell.is-white { background: var(--note-white); }
+
+.SharedNoteShell.is-sky { background: var(--note-skybrand); }
+.SharedNoteShell.is-mint { background: var(--note-mintbrand); }
 
 .NoteCardAccent {
   position: absolute;
