@@ -8,8 +8,9 @@ export default function LandingPage() {
     <div className="TemplateLanding animate-in fade-in duration-700">
       <nav className="fixed top-0 w-full z-[100] h-20 bg-white/80 backdrop-blur-md px-8 md:px-20 flex items-center justify-between border-b border-gray-100">
         <Link to="/" className="Brand tl-brand">
-          <div className="BrandMark tl-brand-mark">M</div>
-          <div className="BrandName text-lg font-extrabold tracking-tight text-gray-900">Memora</div>
+          <div className="BrandMark tl-brand-mark is-logo">
+            <img className="BrandLogo" src="/logo-memora.png" alt="Memora" />
+          </div>
         </Link>
 
         <div className="hidden md:flex items-center gap-8 text-sm font-semibold text-gray-600">
@@ -36,7 +37,9 @@ export default function LandingPage() {
         <div className="max-w-4xl mx-auto text-center">
           <div className="flex flex-col items-center justify-center mb-10 animate-in slide-in-from-top-2 duration-700">
             <div className="tl-hero-logo" aria-hidden="true">
-              <div className="BrandMark tl-brand-mark">M</div>
+              <div className="BrandMark tl-brand-mark is-logo">
+                <img className="BrandLogo" src="/logo-memora.png" alt="Memora" />
+              </div>
             </div>
             <div className="mt-3 text-sm font-bold uppercase tracking-[0.35em] text-gray-500">Memora</div>
           </div>
@@ -297,12 +300,18 @@ export default function LandingPage() {
       </section>
 
       <footer className="py-12 border-t border-gray-100 bg-white px-8 md:px-20">
-        <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-2">
-            <div className="BrandMark tl-brand-mark">M</div>
-            <span className="font-bold text-gray-500">© {new Date().getFullYear()} Memora</span>
+        <div className="grid gap-6 md:grid-cols-[1fr_auto_1fr] md:items-center">
+          <div className="flex items-center justify-start gap-2">
+            <div className="BrandMark tl-brand-mark is-logo">
+              <img className="BrandLogo" src="/logo-memora.png" alt="Memora" />
+            </div>
           </div>
-          <div className="text-xs text-gray-400 font-medium">Terms of Use</div>
+
+          <div className="font-bold text-gray-500" style={{ textAlign: 'center' }}>
+            © {new Date().getFullYear()}
+          </div>
+
+          <div className="text-xs text-gray-400 font-medium md:justify-self-end">Terms of Use</div>
         </div>
       </footer>
     </div>

@@ -500,6 +500,20 @@ a:visited {
   color: var(--ink);
   background: linear-gradient(135deg, rgba(255, 183, 0, 0.95), rgba(255, 142, 202, 0.92));
   box-shadow: 0 14px 30px rgba(30, 30, 30, 0.16);
+  overflow: hidden;
+}
+
+.BrandMark.is-logo {
+  width: 110px;
+  background: transparent;
+  box-shadow: none;
+}
+
+.BrandLogo {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 .BrandName {
@@ -1261,6 +1275,8 @@ a:visited {
   display: flex;
   flex-direction: column;
   position: relative;
+  background: linear-gradient(180deg, rgba(255, 250, 244, 1) 0%, rgba(255, 255, 255, 1) 55%, rgba(255, 238, 221, 1) 100%);
+  --shared-accent: rgba(249, 110, 91, 0.95);
 }
 
 .SharedNoteShell::before {
@@ -1298,17 +1314,20 @@ a:visited {
   padding: 34px 16px 64px;
   display: flex;
   justify-content: center;
+  align-items: flex-start;
 }
 
 .SharedNoteDoc {
   width: 100%;
-  max-width: 920px;
-  background: rgba(255, 255, 255, 0.82);
+  max-width: 760px;
+  background: rgba(255, 255, 255, 0.90);
   border: 1px solid rgba(15, 23, 42, 0.12);
   border-radius: 20px;
   padding: 24px;
-  box-shadow: 0 26px 80px rgba(15, 23, 42, 0.12);
+  box-shadow: 0 26px 80px rgba(15, 23, 42, 0.14);
   backdrop-filter: blur(12px);
+  border-top: 6px solid color-mix(in srgb, var(--shared-accent) 55%, #ffffff);
+  align-self: flex-start;
 }
 
 @media (max-width: 520px) {
@@ -1371,36 +1390,36 @@ a:visited {
 }
 
 .SharedNoteShell.is-mist {
-  background: var(--note-mist);
+  --shared-accent: var(--note-mist);
 }
 
 .SharedNoteShell.is-slate {
-  background: var(--note-slate);
+  --shared-accent: var(--note-slate);
 }
 
 .SharedNoteShell.is-sand {
-  background: var(--note-sand);
+  --shared-accent: var(--note-sand);
 }
 
 .SharedNoteShell.is-sage {
-  background: var(--note-sage);
+  --shared-accent: var(--note-sage);
 }
 
 .SharedNoteShell.is-lavender {
-  background: var(--note-lavenderbrand);
+  --shared-accent: var(--note-lavenderbrand);
 }
 
 .SharedNoteShell.is-custom {
-  background: var(--note-custom, var(--note-cream));
+  --shared-accent: var(--note-custom, var(--note-cream));
 }
 
-.SharedNoteShell.is-cream { background: var(--note-cream); }
-.SharedNoteShell.is-sun { background: var(--note-sun); }
-.SharedNoteShell.is-pink { background: var(--note-pink); }
-.SharedNoteShell.is-white { background: var(--note-white); }
+.SharedNoteShell.is-cream { --shared-accent: var(--note-cream); }
+.SharedNoteShell.is-sun { --shared-accent: var(--note-sun); }
+.SharedNoteShell.is-pink { --shared-accent: var(--note-pink); }
+.SharedNoteShell.is-white { --shared-accent: var(--note-white); }
 
-.SharedNoteShell.is-sky { background: var(--note-skybrand); }
-.SharedNoteShell.is-mint { background: var(--note-mintbrand); }
+.SharedNoteShell.is-sky { --shared-accent: var(--note-skybrand); }
+.SharedNoteShell.is-mint { --shared-accent: var(--note-mintbrand); }
 
 .NoteCardAccent {
   position: absolute;
@@ -1550,18 +1569,19 @@ a:visited {
   max-width: 340px;
   padding: 10px 12px;
   border-radius: 14px;
-  border: 1px solid rgba(15, 23, 42, 0.10);
-  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  background: rgba(255, 214, 165, 0.96);
   box-shadow: var(--shadow);
   backdrop-filter: blur(10px);
-  color: var(--text);
+  color: rgba(15, 23, 42, 0.92);
   font-weight: 700;
   font-size: 0.9rem;
 }
 
 :root.theme-dark .Toast {
-  border-color: rgba(255, 255, 255, 0.14);
-  background: rgba(15, 23, 42, 0.92);
+  border-color: rgba(15, 23, 42, 0.12);
+  background: rgba(255, 214, 165, 0.96);
+  color: rgba(15, 23, 42, 0.92);
 }
 
 .NoteCardPreview {

@@ -540,17 +540,10 @@ export default function LandingPageNew() {
         }}
       >
         <Container className="flex h-16 items-center justify-between">
-          <Link to="/" className="flex items-center gap-3 text-sm font-black tracking-tight">
-            <span
-              className="grid h-9 w-9 place-items-center rounded-[14px] text-white"
-              style={{
-                background: 'linear-gradient(135deg, var(--lp-accent-primary), var(--lp-accent-secondary))',
-                boxShadow: '0 18px 50px rgb(var(--lp-accent-primary-rgb) / 0.28)',
-              }}
-            >
-              M
-            </span>
-            <span>Memora</span>
+          <Link to="/" className="flex items-center gap-3 text-sm font-black tracking-tight" aria-label="Memora">
+            <div className="BrandMark is-logo" style={{ width: 160, height: 36 }}>
+              <img className="BrandLogo" src="/logo-memora.png" alt="Memora" />
+            </div>
           </Link>
 
           <nav className="hidden items-center gap-8 text-sm font-semibold md:flex" aria-label="Primary">
@@ -1240,22 +1233,21 @@ export default function LandingPageNew() {
       </main>
 
       <footer className="border-t" style={{ borderTopColor: 'var(--lp-border)' }}>
-        <Container className="flex flex-col gap-6 py-10 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-3">
-            <span
-              className="grid h-9 w-9 place-items-center rounded-[14px] text-white"
-              style={{ background: 'linear-gradient(135deg, var(--lp-accent-primary), var(--lp-accent-secondary))' }}
-            >
-              M
-            </span>
-            <div>
-              <div className="text-sm font-black">Memora</div>
-              <div className="mt-1 text-xs font-bold" style={{ color: 'var(--lp-text-muted)' }}>
-                © {new Date().getFullYear()} Memora
-              </div>
+        <Container className="grid gap-6 py-10 sm:grid-cols-[1fr_auto_1fr] sm:items-center">
+          <div className="flex items-center justify-start">
+            <div className="BrandMark is-logo" style={{ width: 160, height: 36 }}>
+              <img className="BrandLogo" src="/logo-memora.png" alt="Memora" />
             </div>
           </div>
-          <div className="flex flex-wrap items-center gap-5 text-sm font-bold" style={{ color: 'var(--lp-text-secondary)' }}>
+
+          <div className="text-xs font-bold" style={{ color: 'var(--lp-text-muted)', textAlign: 'center' }}>
+            © {new Date().getFullYear()}
+          </div>
+
+          <div
+            className="flex flex-wrap items-center gap-5 text-sm font-bold sm:justify-self-end"
+            style={{ color: 'var(--lp-text-secondary)' }}
+          >
             <a href="/privacy" className="transition-colors">
               Privacy
             </a>
