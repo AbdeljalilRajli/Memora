@@ -65,6 +65,54 @@ function customColorsStorageKey(userId) {
   return `listem.notes.customColors.${userId || 'anonymous'}`;
 }
 
+function trashStorageKey(userId) {
+  return `listem.notes.trash.${userId || 'anonymous'}`;
+}
+
+function readTrash(userId) {
+  try {
+    const raw = window.localStorage.getItem(trashStorageKey(userId));
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object') return {};
+    return parsed;
+  } catch {
+    return {};
+  }
+}
+
+function writeTrash(userId, map) {
+  try {
+    window.localStorage.setItem(trashStorageKey(userId), JSON.stringify(map || {}));
+  } catch {
+    // ignore
+  }
+}
+
+function pinsStorageKey(userId) {
+  return `listem.notes.pins.${userId || 'anonymous'}`;
+}
+
+function readPins(userId) {
+  try {
+    const raw = window.localStorage.getItem(pinsStorageKey(userId));
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object') return {};
+    return parsed;
+  } catch {
+    return {};
+  }
+}
+
+function writePins(userId, map) {
+  try {
+    window.localStorage.setItem(pinsStorageKey(userId), JSON.stringify(map || {}));
+  } catch {
+    // ignore
+  }
+}
+
 function readCustomColors(userId) {
   try {
     const raw = window.localStorage.getItem(customColorsStorageKey(userId));
@@ -153,6 +201,8 @@ function fromDbNote(row) {
     colorId: normalizeColorId(row.color),
     folderId: row?.folder_id ?? null,
     pinned: false,
+    isTrashed: false,
+    trashedAt: null,
     isDraft: false,
     createdAt: row.created_at ?? new Date().toISOString(),
     updatedAt: row.updated_at ?? new Date().toISOString(),
@@ -306,7 +356,17 @@ export function NotesProvider({ userId, children }) {
           if (!customHex) return n;
           return { ...n, colorId: customHex };
         });
-        setNotes(withCustom);
+        const trash = readTrash(userId);
+        const pins = readPins(userId);
+        const withTrash = withCustom.map((n) => {
+          const trashedAt = trash?.[n.id] || null;
+          const pinned = Boolean(pins?.[n.id]);
+          const baseNote = pinned !== n.pinned ? { ...n, pinned } : n;
+          return trashedAt
+            ? { ...baseNote, isTrashed: true, trashedAt }
+            : { ...baseNote, isTrashed: false, trashedAt: null };
+        });
+        setNotes(withTrash);
       }
 
       if (foldersRes.error) {
@@ -362,6 +422,8 @@ export function NotesProvider({ userId, children }) {
         colorId: 'mist',
         folderId: null,
         pinned: false,
+        isTrashed: false,
+        trashedAt: null,
         isDraft: true,
         createdAt: now,
         updatedAt: now,
@@ -405,6 +467,40 @@ export function NotesProvider({ userId, children }) {
       setNotes(next);
       dirtyIdsRef.current.add(id);
       setSaveStatus('dirty');
+    },
+    [userId]
+  );
+
+  const trashNote = useCallback(
+    (id) => {
+      const now = new Date().toISOString();
+      setNotes((prev) => {
+        const next = prev.map((n) => (n.id === id ? { ...n, isTrashed: true, trashedAt: now } : n));
+        const active = next.find((n) => n.id === id);
+        if (active?.id === activeId) {
+          const candidate = next.find((n) => !n.isTrashed) || null;
+          setActiveId(candidate?.id || null);
+        }
+        return next;
+      });
+
+      const trash = readTrash(userId);
+      trash[id] = now;
+      writeTrash(userId, trash);
+      dirtyIdsRef.current.delete(id);
+    },
+    [activeId, userId]
+  );
+
+  const restoreNote = useCallback(
+    (id) => {
+      setNotes((prev) => prev.map((n) => (n.id === id ? { ...n, isTrashed: false, trashedAt: null } : n)));
+
+      const trash = readTrash(userId);
+      if (trash && Object.prototype.hasOwnProperty.call(trash, id)) {
+        delete trash[id];
+        writeTrash(userId, trash);
+      }
     },
     [userId]
   );
@@ -524,6 +620,16 @@ export function NotesProvider({ userId, children }) {
       dirtyIdsRef.current.delete(id);
 
       setCustomColorForNote(userId, id, '');
+      const trash = readTrash(userId);
+      if (trash && Object.prototype.hasOwnProperty.call(trash, id)) {
+        delete trash[id];
+        writeTrash(userId, trash);
+      }
+      const pins = readPins(userId);
+      if (pins && Object.prototype.hasOwnProperty.call(pins, id)) {
+        delete pins[id];
+        writePins(userId, pins);
+      }
       if (!userId || userId === 'anonymous') return;
 
       const { error } = await supabase.from('notes').delete().eq('id', id).eq('user_id', userId);
@@ -546,8 +652,9 @@ export function NotesProvider({ userId, children }) {
     [userId]
   );
 
-  const togglePin = useCallback((id) => {
-    setNotes((prev) => {
+  const togglePin = useCallback(
+    (id) => {
+      setNotes((prev) => {
       const now = new Date().toISOString();
       const next = prev.map((n) => (n.id === id ? { ...n, pinned: !n.pinned, updatedAt: now } : n));
       next.sort((a, b) => {
@@ -555,8 +662,19 @@ export function NotesProvider({ userId, children }) {
         return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
       });
       return next;
-    });
-  }, []);
+      });
+
+      const pins = readPins(userId);
+      const nextPinned = !Boolean(pins?.[id]);
+      if (nextPinned) {
+        pins[id] = true;
+      } else {
+        delete pins[id];
+      }
+      writePins(userId, pins);
+    },
+    [userId]
+  );
 
   const getNoteContent = useCallback(async (id) => {
     // First check if note exists in local state
@@ -596,6 +714,8 @@ export function NotesProvider({ userId, children }) {
       updateNote,
       updateNoteContent,
       deleteNote,
+      trashNote,
+      restoreNote,
       togglePin,
       getNoteContent,
       createFolder,
@@ -619,9 +739,11 @@ export function NotesProvider({ userId, children }) {
       getNoteContent,
       lastCreatedId,
       notes,
+      restoreNote,
       saveAll,
       saveNote,
       saveStatus,
+      trashNote,
       togglePin,
       updateFolder,
       updateNote,

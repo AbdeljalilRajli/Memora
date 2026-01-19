@@ -93,8 +93,8 @@ function highlightText(text, query) {
   );
 }
 
-export function NoteCard({ note, highlightQuery = '', selected = false }) {
-  const { colors, togglePin, deleteNote, getNoteContent } = useNotes();
+export function NoteCard({ note, highlightQuery = '', selected = false, view = 'notes' }) {
+  const { colors, togglePin, deleteNote, trashNote, restoreNote, getNoteContent } = useNotes();
   const { user } = useAuth();
   const { push } = useToast();
   const cardRef = useRef(null);
@@ -241,6 +241,8 @@ export function NoteCard({ note, highlightQuery = '', selected = false }) {
     }
   };
 
+  const isTrashView = view === 'trash' || Boolean(note.isTrashed);
+
   return (
     <Box ref={cardRef} sx={{ width: '100%' }}>
       <Card
@@ -276,7 +278,7 @@ export function NoteCard({ note, highlightQuery = '', selected = false }) {
               <IconButton
                 size="small"
                 onClick={onShare}
-                disabled={shareLoading}
+                disabled={shareLoading || isTrashView}
                 aria-label="Share"
                 sx={{
                   width: 34,
@@ -301,6 +303,7 @@ export function NoteCard({ note, highlightQuery = '', selected = false }) {
                     setExportOpen((prev) => !prev);
                   }}
                   aria-label="Export"
+                  disabled={isTrashView}
                   sx={{
                     width: 34,
                     height: 34,
@@ -409,70 +412,159 @@ export function NoteCard({ note, highlightQuery = '', selected = false }) {
             : null}
 
           <Stack direction="row" spacing={0.5} alignItems="center" sx={{ mt: 1.0 }} onMouseDown={(e) => e.stopPropagation()}>
-            <IconButton
-              size="small"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                togglePin(note.id);
-              }}
-              aria-label={note.pinned ? 'Unpin note' : 'Pin note'}
-              title={note.pinned ? 'Pinned' : 'Pin'}
-              sx={{
-                width: 34,
-                height: 34,
-                borderRadius: 2.5,
-                border: '1px solid rgba(30,30,30,0.12)',
-                backgroundColor: 'rgba(255,255,255,0.72)',
-                color: 'rgba(30,30,30,0.88)',
-                '&:hover': { backgroundColor: 'rgba(255,255,255,0.92)', borderColor: 'rgba(30,30,30,0.16)' },
-              }}
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                <path
-                  d="M9 3h6l1 6 3 3v2H5v-2l3-3 1-6Zm3 11v7"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </IconButton>
+            {view === 'trash' || note.isTrashed ? (
+              <>
+                <IconButton
+                  size="small"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    restoreNote(note.id);
+                  }}
+                  aria-label="Restore note"
+                  title="Restore"
+                  sx={{
+                    width: 34,
+                    height: 34,
+                    borderRadius: 2.5,
+                    border: '1px solid rgba(30,30,30,0.12)',
+                    backgroundColor: 'rgba(255,255,255,0.72)',
+                    color: 'rgba(30,30,30,0.88)',
+                    '&:hover': { backgroundColor: 'rgba(255,255,255,0.92)', borderColor: 'rgba(30,30,30,0.16)' },
+                  }}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <path
+                      d="M3 7v6h6"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                    <path
+                      d="M21 17a9 9 0 0 1-15 2l-3-3"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </IconButton>
 
-            <IconButton
-              size="small"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                const ok = window.confirm('Delete this note permanently?');
-                if (!ok) return;
-                Promise.resolve(deleteNote(note.id)).catch((err) => {
-                  const msg = err?.message || 'Failed to delete note';
-                  push(msg);
-                });
-              }}
-              aria-label="Delete note"
-              title="Delete"
-              color="error"
-              sx={{
-                width: 34,
-                height: 34,
-                borderRadius: 2.5,
-                border: '1px solid rgba(30,30,30,0.12)',
-                backgroundColor: 'rgba(255,255,255,0.72)',
-                '&:hover': { backgroundColor: 'rgba(255,255,255,0.92)', borderColor: 'rgba(30,30,30,0.16)' },
-              }}
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                <path
-                  d="M4 7h16M10 11v7M14 11v7M9 7l1-2h4l1 2M6 7l1 14h10l1-14"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </IconButton>
+                <IconButton
+                  size="small"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const ok = window.confirm('Delete this note permanently?');
+                    if (!ok) return;
+                    Promise.resolve(deleteNote(note.id)).catch((err) => {
+                      const msg = err?.message || 'Failed to delete note';
+                      push(msg);
+                    });
+                  }}
+                  aria-label="Delete note permanently"
+                  title="Delete forever"
+                  color="error"
+                  sx={{
+                    width: 34,
+                    height: 34,
+                    borderRadius: 2.5,
+                    border: '1px solid rgba(30,30,30,0.12)',
+                    backgroundColor: 'rgba(255,255,255,0.72)',
+                    '&:hover': { backgroundColor: 'rgba(255,255,255,0.92)', borderColor: 'rgba(30,30,30,0.16)' },
+                  }}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <path
+                      d="M4 7h16M10 11v7M14 11v7M9 7l1-2h4l1 2M6 7l1 14h10l1-14"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </IconButton>
+              </>
+            ) : (
+              <>
+                <IconButton
+                  size="small"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    togglePin(note.id);
+                  }}
+                  aria-label={note.pinned ? 'Unpin note' : 'Pin note'}
+                  title={note.pinned ? 'Pinned' : 'Pin'}
+                  sx={{
+                    width: 34,
+                    height: 34,
+                    borderRadius: 2.5,
+                    border: '1px solid rgba(30,30,30,0.12)',
+                    backgroundColor: 'rgba(255,255,255,0.72)',
+                    color: 'rgba(30,30,30,0.88)',
+                    '&:hover': { backgroundColor: 'rgba(255,255,255,0.92)', borderColor: 'rgba(30,30,30,0.16)' },
+                  }}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <path
+                      d="M9 3h6l1 6 3 3v2H5v-2l3-3 1-6Zm3 11v7"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </IconButton>
+
+                <IconButton
+                  size="small"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const ok = window.confirm('Move this note to trash?');
+                    if (!ok) return;
+                    trashNote(note.id);
+                  }}
+                  aria-label="Move note to trash"
+                  title="Trash"
+                  color="error"
+                  sx={{
+                    width: 34,
+                    height: 34,
+                    borderRadius: 2.5,
+                    border: '1px solid rgba(30,30,30,0.12)',
+                    backgroundColor: 'rgba(255,255,255,0.72)',
+                    '&:hover': { backgroundColor: 'rgba(255,255,255,0.92)', borderColor: 'rgba(30,30,30,0.16)' },
+                  }}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <path
+                      d="M3 6h18"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                    <path
+                      d="M8 6V4h8v2"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                    <path
+                      d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </IconButton>
+              </>
+            )}
           </Stack>
         </CardContent>
       </Card>

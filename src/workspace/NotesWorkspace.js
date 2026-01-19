@@ -79,6 +79,7 @@ function NotesWorkspaceInner({ userEmail, onLogout, loggingOut, supabaseHost }) 
   const { push } = useToast();
   const { getActiveNote, getNoteContent, saveNote, saveStatus } = useNotes();
   const [editorOpen, setEditorOpen] = useState(false);
+  const [view, setView] = useState('notes');
   const [lastSaveError, setLastSaveError] = useState('');
 
   const primaryGradientSx = useMemo(
@@ -153,22 +154,46 @@ function NotesWorkspaceInner({ userEmail, onLogout, loggingOut, supabaseHost }) 
       <TopNav userEmail={userEmail} onLogout={onLogout} loggingOut={loggingOut} />
       <div className="AppBody">
         <aside className="NavRail" aria-label="Primary navigation">
-          <button className="NavRailButton isActive" type="button" aria-current="page" title="Notes">
+          <button
+            className={view === 'notes' ? 'NavRailButton isActive' : 'NavRailButton'}
+            type="button"
+            aria-current={view === 'notes' ? 'page' : undefined}
+            title="Notes"
+            onClick={() => setView('notes')}
+          >
             <span className="NavRailIcon" aria-hidden="true"><NotesIcon /></span>
           </button>
-          <button className="NavRailButton" type="button" title="Calendar" disabled>
+          <button
+            className={view === 'calendar' ? 'NavRailButton isActive' : 'NavRailButton'}
+            type="button"
+            aria-current={view === 'calendar' ? 'page' : undefined}
+            title="Calendar"
+            onClick={() => setView('calendar')}
+          >
             <span className="NavRailIcon" aria-hidden="true"><CalendarIcon /></span>
           </button>
-          <button className="NavRailButton" type="button" title="Favorites" disabled>
+          <button
+            className={view === 'favorites' ? 'NavRailButton isActive' : 'NavRailButton'}
+            type="button"
+            aria-current={view === 'favorites' ? 'page' : undefined}
+            title="Favorites"
+            onClick={() => setView('favorites')}
+          >
             <span className="NavRailIcon" aria-hidden="true"><StarIcon /></span>
           </button>
-          <button className="NavRailButton" type="button" title="Trash" disabled>
+          <button
+            className={view === 'trash' ? 'NavRailButton isActive' : 'NavRailButton'}
+            type="button"
+            aria-current={view === 'trash' ? 'page' : undefined}
+            title="Trash"
+            onClick={() => setView('trash')}
+          >
             <span className="NavRailIcon" aria-hidden="true"><TrashIcon /></span>
           </button>
         </aside>
 
         <main className="WorkspaceMain">
-          <DashboardPane onOpenEditor={() => setEditorOpen(true)} />
+          <DashboardPane view={view} onOpenEditor={() => setEditorOpen(true)} />
         </main>
 
         <div className={editorOpen ? 'EditorSheet isOpen' : 'EditorSheet'} role="dialog" aria-label="Note editor">

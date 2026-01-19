@@ -49,7 +49,7 @@ function isAfter(dateStr, minDate) {
   return Number.isFinite(t) && t >= minDate.getTime();
 }
 
-export function DashboardPane({ onOpenEditor }) {
+export function DashboardPane({ view = 'notes', onOpenEditor }) {
   const { notes, folders, activeId, setActiveId, createNote, updateNote, createFolder, updateFolder, deleteFolder } = useNotes();
   const [tab, setTab] = useState('today');
   const [query, setQuery] = useState('');
@@ -90,20 +90,30 @@ export function DashboardPane({ onOpenEditor }) {
   const [editColor, setEditColor] = useState('blue');
 
   const timeMin = useMemo(() => {
+    if (view === 'trash' || view === 'favorites') return new Date(0);
     if (tab === 'today') return startOfToday();
     if (tab === 'week') return startOfWeek();
     if (tab === 'month') return startOfMonth();
     return new Date(0);
-  }, [tab]);
+  }, [tab, view]);
+
+  const viewScopedNotes = useMemo(() => {
+    const base = notes.filter((n) => !n.isDraft);
+    if (view === 'trash') return base.filter((n) => Boolean(n.isTrashed));
+    const active = base.filter((n) => !n.isTrashed);
+    if (view === 'favorites') return active.filter((n) => Boolean(n.pinned));
+    return active;
+  }, [notes, view]);
 
   const timeScopedNotes = useMemo(() => {
-    return notes.filter((n) => !n.isDraft).filter((n) => isAfter(n.updatedAt, timeMin));
-  }, [notes, timeMin]);
+    return viewScopedNotes.filter((n) => isAfter(n.updatedAt, timeMin));
+  }, [timeMin, viewScopedNotes]);
 
   const filteredNotes = useMemo(() => {
     const q = query.trim().toLowerCase();
     return timeScopedNotes
       .filter((n) => {
+        if (view === 'trash' || view === 'favorites') return true;
         if (folderFilter.type === 'pinned') return Boolean(n.pinned);
         if (folderFilter.type === 'unfiled') return !n.folderId;
         if (folderFilter.type === 'folder') return n.folderId === folderFilter.id;
@@ -115,7 +125,7 @@ export function DashboardPane({ onOpenEditor }) {
         const preview = (n.preview || '').toLowerCase();
         return title.includes(q) || preview.includes(q);
       });
-  }, [folderFilter, query, timeScopedNotes]);
+  }, [folderFilter, query, timeScopedNotes, view]);
 
   const pinnedCount = useMemo(() => timeScopedNotes.filter((n) => n.pinned).length, [timeScopedNotes]);
   const unfiledCount = useMemo(() => timeScopedNotes.filter((n) => !n.folderId).length, [timeScopedNotes]);
@@ -215,8 +225,18 @@ export function DashboardPane({ onOpenEditor }) {
     <div className="DashboardPane">
       <div className="DashboardTop">
         <div className="DashboardTitleBlock">
-          <div className="DashboardTitle">My Notes</div>
-          <div className="DashboardSubtitle">Folders and recent notes for quick studying.</div>
+          <div className="DashboardTitle">
+            {view === 'calendar' ? 'Calendar' : view === 'favorites' ? 'Favorites' : view === 'trash' ? 'Trash' : 'My Notes'}
+          </div>
+          <div className="DashboardSubtitle">
+            {view === 'calendar'
+              ? 'Notes updated recently.'
+              : view === 'favorites'
+                ? 'Pinned notes you revise often.'
+                : view === 'trash'
+                  ? 'Recently removed notes.'
+                  : 'Folders and recent notes for quick studying.'}
+          </div>
         </div>
 
         <div className="DashboardActions">
@@ -243,26 +263,47 @@ export function DashboardPane({ onOpenEditor }) {
         </div>
       </div>
 
-      <div className="DashboardSection">
-        <div className="SectionHeader">
-          <div className="SectionTitle">Recent folders</div>
-          <div className="SectionTabs">
-            <button type="button" className={tab === 'today' ? 'TabButton isActive' : 'TabButton'} onClick={() => setTab('today')}>
-              Today
-            </button>
-            <button type="button" className={tab === 'week' ? 'TabButton isActive' : 'TabButton'} onClick={() => setTab('week')}>
-              This week
-            </button>
-            <button type="button" className={tab === 'month' ? 'TabButton isActive' : 'TabButton'} onClick={() => setTab('month')}>
-              This month
-            </button>
-            <button type="button" className={tab === 'all' ? 'TabButton isActive' : 'TabButton'} onClick={() => setTab('all')}>
-              All
-            </button>
+      {view === 'calendar' ? (
+        <div className="DashboardSection">
+          <div className="SectionHeader">
+            <div className="SectionTitle">Time range</div>
+            <div className="SectionTabs">
+              <button type="button" className={tab === 'today' ? 'TabButton isActive' : 'TabButton'} onClick={() => setTab('today')}>
+                Today
+              </button>
+              <button type="button" className={tab === 'week' ? 'TabButton isActive' : 'TabButton'} onClick={() => setTab('week')}>
+                This week
+              </button>
+              <button type="button" className={tab === 'month' ? 'TabButton isActive' : 'TabButton'} onClick={() => setTab('month')}>
+                This month
+              </button>
+              <button type="button" className={tab === 'all' ? 'TabButton isActive' : 'TabButton'} onClick={() => setTab('all')}>
+                All
+              </button>
+            </div>
           </div>
         </div>
+      ) : view === 'notes' ? (
+        <div className="DashboardSection">
+          <div className="SectionHeader">
+            <div className="SectionTitle">Recent folders</div>
+            <div className="SectionTabs">
+              <button type="button" className={tab === 'today' ? 'TabButton isActive' : 'TabButton'} onClick={() => setTab('today')}>
+                Today
+              </button>
+              <button type="button" className={tab === 'week' ? 'TabButton isActive' : 'TabButton'} onClick={() => setTab('week')}>
+                This week
+              </button>
+              <button type="button" className={tab === 'month' ? 'TabButton isActive' : 'TabButton'} onClick={() => setTab('month')}>
+                This month
+              </button>
+              <button type="button" className={tab === 'all' ? 'TabButton isActive' : 'TabButton'} onClick={() => setTab('all')}>
+                All
+              </button>
+            </div>
+          </div>
 
-        <div className="FolderRow">
+          <div className="FolderRow">
           <div
             className={folderFilter.type === 'all' ? 'FolderCard isActive isBlue' : 'FolderCard isBlue'}
             onClick={() => setFolderFilter({ type: 'all' })}
@@ -339,8 +380,9 @@ export function DashboardPane({ onOpenEditor }) {
               <div className="FolderNewLabel">New folder</div>
             </div>
           </div>
+          </div>
         </div>
-      </div>
+      ) : null}
 
       <Menu anchorEl={folderMenuAnchor} open={folderMenuOpen} onClose={closeFolderMenu}>
         <MenuItem onClick={() => openEditFolder(folderMenuId)}>Edit</MenuItem>
@@ -407,18 +449,30 @@ export function DashboardPane({ onOpenEditor }) {
 
       <div className="DashboardSection">
         <div className="SectionHeader">
-          <div className="SectionTitle">My Notes</div>
+          <div className="SectionTitle">
+            {view === 'trash' ? 'Trash' : view === 'favorites' ? 'Favorites' : view === 'calendar' ? 'Notes' : 'My Notes'}
+          </div>
           <div className="SectionHint">{filteredNotes.length} shown</div>
         </div>
 
         {filteredNotes.length === 0 ? (
           <div className="DashboardEmpty">
             <div className="DashboardEmptyTitle">No notes found</div>
-            <div className="DashboardEmptyDesc">Try a different search or create a new note.</div>
+            <div className="DashboardEmptyDesc">
+              {view === 'trash'
+                ? 'Trash is empty.'
+                : view === 'favorites'
+                  ? 'Pin notes to see them here.'
+                  : view === 'calendar'
+                    ? 'No notes in this time range.'
+                    : 'Try a different search or create a new note.'}
+            </div>
             <div className="DashboardEmptyActions">
-              <Button variant="contained" onClick={onNewNote} sx={primaryGradientSx}>
-                Create note
-              </Button>
+              {view === 'trash' ? null : (
+                <Button variant="contained" onClick={onNewNote} sx={primaryGradientSx}>
+                  Create note
+                </Button>
+              )}
             </div>
           </div>
         ) : (
@@ -446,7 +500,7 @@ export function DashboardPane({ onOpenEditor }) {
                 tabIndex={0}
                 aria-label={`Open note ${n.title || 'Untitled'}`}
               >
-                <NoteCard note={n} highlightQuery={query} selected={n.id === activeId} />
+                <NoteCard note={n} highlightQuery={query} selected={n.id === activeId} view={view} />
               </div>
             ))}
           </div>
