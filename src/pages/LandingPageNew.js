@@ -585,153 +585,161 @@ export default function LandingPageNew() {
       </header>
 
       <main>
-        <Section id="top" className="relative pt-20" style={{ background: 'linear-gradient(180deg, var(--lp-bg), var(--lp-bg-2))' }}>
-          <div ref={heroRef} className="grid items-center gap-10 pb-16 pt-10 lg:grid-cols-2 lg:pb-24">
-            <motion.div variants={heroContainer} initial={reduceMotion ? false : 'hidden'} animate="show">
-              <motion.div
-                variants={heroLine}
-                className="inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-[11px] font-extrabold uppercase tracking-[0.24em]"
-                style={{ borderColor: 'var(--lp-border)', background: 'var(--lp-surface)', color: 'var(--lp-text-muted)' }}
-              >
-                <span
-                  className="h-1.5 w-1.5 rounded-full"
-                  style={{ background: 'linear-gradient(135deg, var(--lp-accent-primary), var(--lp-accent-secondary))' }}
-                />
-                Calm, writing-first notes
-              </motion.div>
-
-              <motion.h1
-                variants={heroLine}
-                className="mt-6 text-4xl font-black tracking-tight sm:text-5xl lg:text-6xl"
-                style={{ letterSpacing: '-0.04em' }}
-              >
-                Notes that feel
-                <br />
-                <span
-                  style={{
-                    background: 'linear-gradient(135deg, var(--lp-accent-primary), var(--lp-accent-secondary))',
-                    WebkitBackgroundClip: 'text',
-                    backgroundClip: 'text',
-                    color: 'transparent',
-                  }}
+        <section
+          id="top"
+          className="relative pt-20 HeroSection"
+          style={{ background: 'linear-gradient(180deg, var(--lp-bg), var(--lp-bg-2))' }}
+          data-reduce-motion={reduceMotion ? 'true' : 'false'}
+        >
+          <div className="HeroAurora" aria-hidden="true" />
+          <Container>
+            <div ref={heroRef} className="grid items-center gap-10 pb-16 pt-10 lg:grid-cols-2 lg:pb-24">
+              <motion.div variants={heroContainer} initial={reduceMotion ? false : 'hidden'} animate="show">
+                <motion.div
+                  variants={heroLine}
+                  className="inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-[11px] font-extrabold uppercase tracking-[0.24em]"
+                  style={{ borderColor: 'var(--lp-border)', background: 'var(--lp-surface)', color: 'var(--lp-text-muted)' }}
                 >
-                  like a real product
-                </span>{' '}
-                .
-              </motion.h1>
-
-              <motion.p
-                variants={heroLine}
-                className="mt-5 max-w-xl text-base leading-relaxed sm:text-lg"
-                style={{ color: 'var(--lp-text-secondary)' }}
-              >
-                A focused editor with gentle organization: color-coded notes, fast search, and share links when you need them.
-              </motion.p>
-
-              <motion.div variants={heroLine} className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center">
-                <Link
-                  to="/signup"
-                  className="inline-flex h-12 items-center justify-center rounded-[16px] px-6 text-sm font-extrabold"
-                  style={{
-                    background: 'linear-gradient(135deg, var(--lp-accent-primary), var(--lp-accent-secondary))',
-                    color: 'white',
-                    boxShadow: '0 24px 80px rgb(var(--lp-accent-primary-rgb) / 0.22)',
-                  }}
-                >
-                  Get started free
-                </Link>
-                <Link
-                  to="/app"
-                  className="inline-flex h-12 items-center justify-center rounded-[16px] border px-6 text-sm font-extrabold"
-                  style={{ borderColor: 'var(--lp-border)', background: 'var(--lp-surface)', color: 'var(--lp-text)' }}
-                >
-                  Open app
-                </Link>
-                <a
-                  href="#features"
-                  className="inline-flex h-12 items-center justify-center rounded-[16px] border px-6 text-sm font-extrabold"
-                  style={{ borderColor: 'var(--lp-border)', background: 'transparent', color: 'var(--lp-text)' }}
-                >
-                  See features
-                </a>
-              </motion.div>
-
-              <motion.div variants={heroLine} className="mt-8 flex items-center gap-4">
-                <div className="flex -space-x-2">
-                  {['AM', 'JR', 'SK', 'TD', 'LN'].map((initials) => (
-                    <span
-                      key={initials}
-                      className="grid h-9 w-9 place-items-center rounded-full border text-[11px] font-black"
-                      style={{ borderColor: 'var(--lp-border)', background: 'var(--lp-surface)', color: 'var(--lp-text-secondary)' }}
-                    >
-                      {initials}
-                    </span>
-                  ))}
-                </div>
-                <div className="text-sm font-bold" style={{ color: 'var(--lp-text-secondary)' }}>
-                  Loved by creators, developers, and thinkers
-                </div>
-              </motion.div>
-            </motion.div>
-
-            <motion.div style={{ y: reduceMotion ? 0 : mockupY, rotate: reduceMotion ? 0 : mockupRotate }} className="relative">
-              <div
-                className="pointer-events-none absolute -inset-10 rounded-[40px]"
-                aria-hidden="true"
-                style={{
-                  background:
-                    'radial-gradient(closest-side at 32% 40%, rgb(var(--lp-accent-primary-rgb) / 0.36), transparent 72%), radial-gradient(closest-side at 72% 55%, rgb(var(--lp-accent-secondary-rgb) / 0.22), transparent 74%), radial-gradient(closest-side at 52% 85%, rgb(var(--lp-accent-tertiary-rgb) / 0.18), transparent 74%)',
-                  filter: 'blur(18px)',
-                  opacity: 0.9,
-                }}
-              />
-
-              <motion.div
-                className="relative"
-                animate={reduceMotion ? undefined : { y: [0, -10, 0] }}
-                transition={reduceMotion ? undefined : { duration: 7.5, ease: 'easeInOut', repeat: Infinity }}
-              >
-                <ScreenshotFrame title="Dashboard" src="/memora-dashboard.png" alt="Memora dashboard" />
-              </motion.div>
-
-              <div
-                className="pointer-events-none absolute -bottom-8 -right-8 hidden rounded-[28px] border p-4 lg:block"
-                aria-hidden="true"
-                style={{
-                  borderColor: 'var(--lp-border)',
-                  background: 'var(--lp-surface)',
-                  backdropFilter: 'blur(12px)',
-                  boxShadow: 'var(--lp-shadow)',
-                }}
-              >
-                <div className="text-xs font-black" style={{ color: 'var(--lp-text)' }}>
-                  Search
-                </div>
-                <div className="mt-2 h-2.5 w-40 rounded-full" style={{ background: 'rgba(148, 163, 184, 0.22)' }} />
-                <div className="mt-3 flex items-center gap-2">
                   <span
-                    className="h-6 rounded-full border px-3 text-[11px] font-extrabold"
+                    className="h-1.5 w-1.5 rounded-full"
+                    style={{ background: 'linear-gradient(135deg, var(--lp-accent-primary), var(--lp-accent-secondary))' }}
+                  />
+                  Calm, writing-first notes
+                </motion.div>
+
+                <motion.h1
+                  variants={heroLine}
+                  className="mt-6 text-4xl font-black tracking-tight sm:text-5xl lg:text-6xl"
+                  style={{ letterSpacing: '-0.04em' }}
+                >
+                  Notes that feel
+                  <br />
+                  <span
                     style={{
-                      borderColor: 'rgb(var(--lp-accent-secondary-rgb) / 0.30)',
-                      background: 'rgb(var(--lp-accent-secondary-rgb) / 0.14)',
-                      color: 'var(--lp-text)',
+                      background: 'linear-gradient(135deg, var(--lp-accent-primary), var(--lp-accent-secondary))',
+                      WebkitBackgroundClip: 'text',
+                      backgroundClip: 'text',
+                      color: 'transparent',
                     }}
                   >
-                    “meeting”
-                  </span>
-                  <span
-                    className="h-6 rounded-full border px-3 text-[11px] font-extrabold"
-                    style={{ borderColor: 'var(--lp-border)', background: 'var(--lp-surface)', color: 'var(--lp-text-secondary)' }}
-                  >
-                    9 results
-                  </span>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        </Section>
+                    like a real product
+                  </span>{' '}
+                  .
+                </motion.h1>
 
-        <Section className="pb-10" style={{ background: 'var(--lp-bg-2)' }}>
+                <motion.p
+                  variants={heroLine}
+                  className="mt-5 max-w-xl text-base leading-relaxed sm:text-lg"
+                  style={{ color: 'var(--lp-text-secondary)' }}
+                >
+                  A focused editor with gentle organization: color-coded notes, fast search, and share links when you need them.
+                </motion.p>
+
+                <motion.div variants={heroLine} className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center">
+                  <Link
+                    to="/signup"
+                    className="inline-flex h-12 items-center justify-center rounded-[16px] px-6 text-sm font-extrabold"
+                    style={{
+                      background: 'linear-gradient(135deg, var(--lp-accent-primary), var(--lp-accent-secondary))',
+                      color: 'white',
+                      boxShadow: '0 24px 80px rgb(var(--lp-accent-primary-rgb) / 0.22)',
+                    }}
+                  >
+                    Get started free
+                  </Link>
+                  <Link
+                    to="/app"
+                    className="inline-flex h-12 items-center justify-center rounded-[16px] border px-6 text-sm font-extrabold"
+                    style={{ borderColor: 'var(--lp-border)', background: 'var(--lp-surface)', color: 'var(--lp-text)' }}
+                  >
+                    Open app
+                  </Link>
+                  <a
+                    href="#features"
+                    className="inline-flex h-12 items-center justify-center rounded-[16px] border px-6 text-sm font-extrabold"
+                    style={{ borderColor: 'var(--lp-border)', background: 'transparent', color: 'var(--lp-text)' }}
+                  >
+                    See features
+                  </a>
+                </motion.div>
+
+                <motion.div variants={heroLine} className="mt-8 flex items-center gap-4">
+                  <div className="flex -space-x-2">
+                    {['AM', 'JR', 'SK', 'TD', 'LN'].map((initials) => (
+                      <span
+                        key={initials}
+                        className="grid h-9 w-9 place-items-center rounded-full border text-[11px] font-black"
+                        style={{ borderColor: 'var(--lp-border)', background: 'var(--lp-surface)', color: 'var(--lp-text-secondary)' }}
+                      >
+                        {initials}
+                      </span>
+                    ))}
+                  </div>
+                  <div className="text-sm font-bold" style={{ color: 'var(--lp-text-secondary)' }}>
+                    Loved by creators, developers, and thinkers
+                  </div>
+                </motion.div>
+              </motion.div>
+
+              <motion.div style={{ y: reduceMotion ? 0 : mockupY, rotate: reduceMotion ? 0 : mockupRotate }} className="relative">
+                <div
+                  className="pointer-events-none absolute -inset-10 rounded-[40px]"
+                  aria-hidden="true"
+                  style={{
+                    background:
+                      'radial-gradient(closest-side at 32% 40%, rgb(var(--lp-accent-primary-rgb) / 0.36), transparent 72%), radial-gradient(closest-side at 72% 55%, rgb(var(--lp-accent-secondary-rgb) / 0.22), transparent 74%), radial-gradient(closest-side at 52% 85%, rgb(var(--lp-accent-tertiary-rgb) / 0.18), transparent 74%)',
+                    filter: 'blur(18px)',
+                    opacity: 0.9,
+                  }}
+                />
+
+                <motion.div
+                  className="relative"
+                  animate={reduceMotion ? undefined : { y: [0, -10, 0] }}
+                  transition={reduceMotion ? undefined : { duration: 7.5, ease: 'easeInOut', repeat: Infinity }}
+                >
+                  <ScreenshotFrame title="Dashboard" src="/memora-dashboard.png" alt="Memora dashboard" />
+                </motion.div>
+
+                <div
+                  className="pointer-events-none absolute -bottom-8 -right-8 hidden rounded-[28px] border p-4 lg:block"
+                  aria-hidden="true"
+                  style={{
+                    borderColor: 'var(--lp-border)',
+                    background: 'var(--lp-surface)',
+                    backdropFilter: 'blur(12px)',
+                    boxShadow: 'var(--lp-shadow)',
+                  }}
+                >
+                  <div className="text-xs font-black" style={{ color: 'var(--lp-text)' }}>
+                    Search
+                  </div>
+                  <div className="mt-2 h-2.5 w-40 rounded-full" style={{ background: 'rgba(148, 163, 184, 0.22)' }} />
+                  <div className="mt-3 flex items-center gap-2">
+                    <span
+                      className="h-6 rounded-full border px-3 text-[11px] font-extrabold"
+                      style={{
+                        borderColor: 'rgb(var(--lp-accent-secondary-rgb) / 0.30)',
+                        background: 'rgb(var(--lp-accent-secondary-rgb) / 0.14)',
+                        color: 'var(--lp-text)',
+                      }}
+                    >
+                      “meeting”
+                    </span>
+                    <span
+                      className="h-6 rounded-full border px-3 text-[11px] font-extrabold"
+                      style={{ borderColor: 'var(--lp-border)', background: 'var(--lp-surface)', color: 'var(--lp-text-secondary)' }}
+                    >
+                      9 results
+                    </span>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          </Container>
+        </section>
+
+        <Section className="pt-10 pb-10" style={{ background: 'var(--lp-bg-2)' }}>
           <FadeIn>
             <div className="mx-auto grid max-w-6xl gap-3 sm:grid-cols-3">
               {[{ k: '2 min', t: 'Setup', d: 'Start fast' }, { k: 'PDF/MD/TXT', t: 'Export', d: 'Portable notes' }, { k: 'Links', t: 'Sharing', d: 'Send when needed' }].map(
