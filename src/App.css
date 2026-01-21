@@ -504,7 +504,8 @@ a:visited {
 }
 
 .BrandMark.is-logo {
-  width: 110px;
+  width: 130px;
+  height: 34px;
   background: transparent;
   box-shadow: none;
 }

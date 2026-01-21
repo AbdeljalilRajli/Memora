@@ -230,6 +230,12 @@ export function NotesProvider({ userId, children }) {
   const [saveStatus, setSaveStatus] = useState('saved');
   const latestRef = useRef({ userId, notes });
   const dirtyIdsRef = useRef(new Set());
+  const foldersTableRef = useRef('folders');
+
+  const isMissingTableError = useCallback((error) => {
+    const msg = (error?.message || '').toLowerCase();
+    return msg.includes("could not find table") && msg.includes('schema cache');
+  }, []);
 
   const canPersistNote = useCallback((note) => {
     if (!note) return false;
@@ -330,20 +336,48 @@ export function NotesProvider({ userId, children }) {
         return;
       }
 
+      const fetchFolders = async () => {
+        const first = foldersTableRef.current || 'folders';
+        const query = (table) =>
+          supabase
+            .from(table)
+            .select('id, user_id, name, color, created_at, updated_at')
+            .eq('user_id', userId)
+            .order('updated_at', { ascending: false });
+
+        let res = await query(first);
+        if (res.error && isMissingTableError(res.error)) {
+          const other = first === 'folders' ? 'folder' : 'folders';
+          const retry = await query(other);
+          if (!retry.error) {
+            foldersTableRef.current = other;
+            res = retry;
+          }
+        }
+        return res;
+      };
+
       const [notesRes, foldersRes] = await Promise.all([
         supabase
           .from('notes')
           .select('id, user_id, title, description, content, color, folder_id, created_at, updated_at')
           .eq('user_id', userId)
           .order('updated_at', { ascending: false }),
-        supabase
-          .from('folders')
-          .select('id, user_id, name, color, created_at, updated_at')
-          .eq('user_id', userId)
-          .order('updated_at', { ascending: false }),
+        fetchFolders(),
       ]);
 
       if (cancelled) return;
+
+      let loadedFolders = [];
+
+      if (foldersRes.error) {
+        // eslint-disable-next-line no-console
+        console.error('Failed to load folders from Supabase:', foldersRes.error);
+        setFolders([]);
+      } else {
+        loadedFolders = (foldersRes.data || []).map(fromDbFolder);
+        setFolders(loadedFolders);
+      }
 
       if (notesRes.error) {
         // eslint-disable-next-line no-console
@@ -366,15 +400,15 @@ export function NotesProvider({ userId, children }) {
             ? { ...baseNote, isTrashed: true, trashedAt }
             : { ...baseNote, isTrashed: false, trashedAt: null };
         });
-        setNotes(withTrash);
-      }
 
-      if (foldersRes.error) {
-        // eslint-disable-next-line no-console
-        console.error('Failed to load folders from Supabase:', foldersRes.error);
-        setFolders([]);
-      } else {
-        setFolders((foldersRes.data || []).map(fromDbFolder));
+        const folderIds = new Set(loadedFolders.map((f) => f.id));
+        const withOrphansFixed = withTrash.map((n) => {
+          if (!n.folderId) return n;
+          if (folderIds.has(n.folderId)) return n;
+          return { ...n, folderId: null };
+        });
+
+        setNotes(withOrphansFixed);
       }
     };
 
@@ -523,21 +557,35 @@ export function NotesProvider({ userId, children }) {
         return id;
       }
 
-      const { error } = await supabase.from('folders').insert({
-        id,
-        user_id: userId,
-        name: folder.name,
-        color: folder.color,
-      });
+      const insertInto = async (table) =>
+        await supabase.from(table).insert({
+          id,
+          user_id: userId,
+          name: folder.name,
+          color: folder.color,
+        });
 
-      if (error) {
+      const first = foldersTableRef.current || 'folders';
+      let res = await insertInto(first);
+      if (res.error && isMissingTableError(res.error)) {
+        const other = first === 'folders' ? 'folder' : 'folders';
+        const retry = await insertInto(other);
+        if (!retry.error) {
+          foldersTableRef.current = other;
+          res = retry;
+        }
+      }
+
+      if (res.error) {
+        setFolders((prev) => prev.filter((f) => f.id !== id));
         // eslint-disable-next-line no-console
-        console.error('Failed to create folder in Supabase:', error);
+        console.error('Failed to create folder in Supabase:', res.error);
+        throw new Error(res.error?.message || 'Failed to create folder. Please check your Supabase policies/permissions.');
       }
 
       return id;
     },
-    [userId]
+    [isMissingTableError, userId]
   );
 
   const updateFolder = useCallback(
@@ -552,13 +600,24 @@ export function NotesProvider({ userId, children }) {
       if (Object.prototype.hasOwnProperty.call(patch, 'color')) payload.color = (patch.color || '').trim() || 'blue';
       if (!Object.keys(payload).length) return;
 
-      const { error } = await supabase.from('folders').update(payload).eq('id', id).eq('user_id', userId);
-      if (error) {
+      const runUpdate = async (table) => await supabase.from(table).update(payload).eq('id', id).eq('user_id', userId);
+      const first = foldersTableRef.current || 'folders';
+      let res = await runUpdate(first);
+      if (res.error && isMissingTableError(res.error)) {
+        const other = first === 'folders' ? 'folder' : 'folders';
+        const retry = await runUpdate(other);
+        if (!retry.error) {
+          foldersTableRef.current = other;
+          res = retry;
+        }
+      }
+
+      if (res.error) {
         // eslint-disable-next-line no-console
-        console.error('Failed to update folder in Supabase:', error);
+        console.error('Failed to update folder in Supabase:', res.error);
       }
     },
-    [userId]
+    [isMissingTableError, userId]
   );
 
   const deleteFolder = useCallback(
@@ -568,19 +627,44 @@ export function NotesProvider({ userId, children }) {
 
       if (!userId || userId === 'anonymous') return;
 
-      const { error } = await supabase.from('folders').delete().eq('id', id).eq('user_id', userId);
-      if (error) {
+      const runDelete = async (table) => await supabase.from(table).delete().eq('id', id).eq('user_id', userId);
+      const first = foldersTableRef.current || 'folders';
+      let res = await runDelete(first);
+      if (res.error && isMissingTableError(res.error)) {
+        const other = first === 'folders' ? 'folder' : 'folders';
+        const retry = await runDelete(other);
+        if (!retry.error) {
+          foldersTableRef.current = other;
+          res = retry;
+        }
+      }
+
+      if (res.error) {
         // eslint-disable-next-line no-console
-        console.error('Failed to delete folder in Supabase:', error);
+        console.error('Failed to delete folder in Supabase:', res.error);
       }
     },
-    [userId]
+    [isMissingTableError, userId]
   );
 
   const updateNoteContent = useCallback(
     (id, contentJSON) => {
       const preview = derivePreview(contentJSON);
-      updateNote(id, { content: contentJSON, preview });
+
+      const snapshotNotes = latestRef.current.notes || [];
+      const existing = snapshotNotes.find((n) => n.id === id);
+      const patch = { content: contentJSON, preview };
+
+      if (existing) {
+        const currentDesc = (existing.description || '').trim();
+        const currentPreview = (existing.preview || derivePreview(existing.content) || '').trim();
+        const shouldUpdateDesc = !currentDesc || currentDesc === currentPreview;
+        if (shouldUpdateDesc) {
+          patch.description = preview;
+        }
+      }
+
+      updateNote(id, patch);
     },
     [updateNote]
   );

@@ -541,7 +541,7 @@ export default function LandingPageNew() {
       >
         <Container className="flex h-16 items-center justify-between">
           <Link to="/" className="flex items-center gap-3 text-sm font-black tracking-tight" aria-label="Memora">
-            <div className="BrandMark is-logo" style={{ width: 160, height: 36 }}>
+            <div className="BrandMark is-logo" style={{ width: 175, height: 40 }}>
               <img className="BrandLogo" src="/logo-memora.png" alt="Memora" />
             </div>
           </Link>

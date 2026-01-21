@@ -14,6 +14,7 @@ import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import { useNotes } from '../../notes/NotesProvider';
 import { NoteCard } from './NoteCard';
+import { useToast } from '../../ui/ToastProvider';
 
 function folderColorClass(color) {
   const v = String(color || 'blue').toLowerCase().trim();
@@ -51,6 +52,7 @@ function isAfter(dateStr, minDate) {
 
 export function DashboardPane({ view = 'notes', onOpenEditor }) {
   const { notes, folders, activeId, setActiveId, createNote, updateNote, createFolder, updateFolder, deleteFolder } = useNotes();
+  const { push } = useToast();
   const [tab, setTab] = useState('today');
   const [query, setQuery] = useState('');
   const [folderFilter, setFolderFilter] = useState({ type: 'all' });
@@ -205,9 +207,13 @@ export function DashboardPane({ view = 'notes', onOpenEditor }) {
   };
 
   const onCreateFolder = async () => {
-    const id = await createFolder({ name: folderName, color: folderColor });
-    setCreateOpen(false);
-    if (id) setFolderFilter({ type: 'folder', id });
+    try {
+      const id = await createFolder({ name: folderName, color: folderColor });
+      setCreateOpen(false);
+      if (id) setFolderFilter({ type: 'folder', id });
+    } catch (err) {
+      push(err?.message || 'Failed to create folder');
+    }
   };
 
   const onSelectNote = (id) => {
