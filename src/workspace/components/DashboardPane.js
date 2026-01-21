@@ -18,8 +18,14 @@ import { useToast } from '../../ui/ToastProvider';
 
 function folderColorClass(color) {
   const v = String(color || 'blue').toLowerCase().trim();
+  if (v === 'cyan') return 'isCyan';
+  if (v === 'teal') return 'isTeal';
+  if (v === 'green') return 'isGreen';
   if (v === 'mint') return 'isMint';
   if (v === 'lavender') return 'isLavender';
+  if (v === 'indigo') return 'isIndigo';
+  if (v === 'pink') return 'isPink';
+  if (v === 'red') return 'isRed';
   if (v === 'peach') return 'isPeach';
   if (v === 'yellow') return 'isYellow';
   return 'isBlue';
@@ -49,6 +55,8 @@ function isAfter(dateStr, minDate) {
   const t = new Date(dateStr).getTime();
   return Number.isFinite(t) && t >= minDate.getTime();
 }
+
+const folderColorCycle = ['blue', 'cyan', 'teal', 'green', 'mint', 'lavender', 'indigo', 'pink', 'red', 'peach', 'yellow'];
 
 function PinIcon() {
   return (
@@ -336,7 +344,7 @@ export function DashboardPane({ view = 'notes', onOpenEditor }) {
 
   const openCreateFolder = () => {
     setFolderName('');
-    setFolderColor('blue');
+    setFolderColor(folderColorCycle[folders.length % folderColorCycle.length] || 'blue');
     setCreateOpen(true);
   };
 
@@ -582,10 +590,16 @@ export function DashboardPane({ view = 'notes', onOpenEditor }) {
             <FormControl>
               <Select value={editColor} onChange={(e) => setEditColor(e.target.value)}>
                 <MenuItem value="blue">Blue</MenuItem>
+                <MenuItem value="cyan">Cyan</MenuItem>
+                <MenuItem value="teal">Teal</MenuItem>
+                <MenuItem value="green">Green</MenuItem>
                 <MenuItem value="peach">Peach</MenuItem>
+                <MenuItem value="red">Red</MenuItem>
+                <MenuItem value="pink">Pink</MenuItem>
                 <MenuItem value="yellow">Yellow</MenuItem>
                 <MenuItem value="mint">Mint</MenuItem>
                 <MenuItem value="lavender">Lavender</MenuItem>
+                <MenuItem value="indigo">Indigo</MenuItem>
               </Select>
             </FormControl>
           </Stack>
@@ -645,10 +659,16 @@ export function DashboardPane({ view = 'notes', onOpenEditor }) {
             <FormControl>
               <Select value={folderColor} onChange={(e) => setFolderColor(e.target.value)}>
                 <MenuItem value="blue">Blue</MenuItem>
+                <MenuItem value="cyan">Cyan</MenuItem>
+                <MenuItem value="teal">Teal</MenuItem>
+                <MenuItem value="green">Green</MenuItem>
                 <MenuItem value="peach">Peach</MenuItem>
+                <MenuItem value="red">Red</MenuItem>
+                <MenuItem value="pink">Pink</MenuItem>
                 <MenuItem value="yellow">Yellow</MenuItem>
                 <MenuItem value="mint">Mint</MenuItem>
                 <MenuItem value="lavender">Lavender</MenuItem>
+                <MenuItem value="indigo">Indigo</MenuItem>
               </Select>
             </FormControl>
           </Stack>

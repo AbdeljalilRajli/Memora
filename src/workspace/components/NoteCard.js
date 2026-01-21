@@ -501,13 +501,24 @@ export function NoteCard({ note, highlightQuery = '', selected = false, view = '
                     width: 34,
                     height: 34,
                     borderRadius: 2.5,
-                    border: '1px solid rgba(30,30,30,0.12)',
-                    backgroundColor: 'rgba(255,255,255,0.72)',
-                    color: 'rgba(30,30,30,0.88)',
-                    '&:hover': { backgroundColor: 'rgba(255,255,255,0.92)', borderColor: 'rgba(30,30,30,0.16)' },
+                    border: note.pinned ? '1px solid rgba(255,183,0,0.60)' : '1px solid rgba(30,30,30,0.12)',
+                    backgroundColor: note.pinned ? 'rgba(255,183,0,0.20)' : 'rgba(255,255,255,0.72)',
+                    color: note.pinned ? 'rgba(15,23,42,0.92)' : 'rgba(30,30,30,0.88)',
+                    boxShadow: note.pinned ? '0 0 0 4px rgba(255,183,0,0.14)' : 'none',
+                    '&:hover': note.pinned
+                      ? { backgroundColor: 'rgba(255,183,0,0.26)', borderColor: 'rgba(255,183,0,0.85)', color: 'rgba(15,23,42,0.92)' }
+                      : { backgroundColor: 'rgba(255,255,255,0.92)', borderColor: 'rgba(30,30,30,0.16)' },
                   }}
                 >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill={note.pinned ? 'currentColor' : 'none'}
+                    xmlns="http://www.w3.org/2000/svg"
+                    aria-hidden="true"
+                    style={{ opacity: note.pinned ? 0.95 : 0.92 }}
+                  >
                     <path
                       d="M9 3h6l1 6 3 3v2H5v-2l3-3 1-6Zm3 11v7"
                       stroke="currentColor"

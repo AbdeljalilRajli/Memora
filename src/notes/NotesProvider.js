@@ -9,10 +9,16 @@ const DEFAULT_COLORS = [
   { id: 'cream', label: 'Cream', bg: 'var(--note-cream)', chip: 'var(--chip-cream)' },
   { id: 'sun', label: 'Sun', bg: 'var(--note-sun)', chip: 'var(--chip-sun)' },
   { id: 'pink', label: 'Pink', bg: 'var(--note-pink)', chip: 'var(--chip-pink)' },
+  { id: 'red', label: 'Red', bg: 'var(--note-red)', chip: 'var(--chip-red)' },
+  { id: 'orange', label: 'Orange', bg: 'var(--note-orange)', chip: 'var(--chip-orange)' },
   { id: 'white', label: 'White', bg: 'var(--note-white)', chip: 'var(--chip-white)' },
   { id: 'sky', label: 'Sky', bg: 'var(--note-skybrand)', chip: 'var(--chip-skybrand)' },
+  { id: 'cyan', label: 'Cyan', bg: 'var(--note-cyan)', chip: 'var(--chip-cyan)' },
+  { id: 'teal', label: 'Teal', bg: 'var(--note-teal)', chip: 'var(--chip-teal)' },
   { id: 'mint', label: 'Mint', bg: 'var(--note-mintbrand)', chip: 'var(--chip-mintbrand)' },
+  { id: 'green', label: 'Green', bg: 'var(--note-green)', chip: 'var(--chip-green)' },
   { id: 'lavender', label: 'Lavender', bg: 'var(--note-lavenderbrand)', chip: 'var(--chip-lavenderbrand)' },
+  { id: 'indigo', label: 'Indigo', bg: 'var(--note-indigo)', chip: 'var(--chip-indigo)' },
 ];
 
 function normalizeColorId(raw) {
@@ -22,7 +28,7 @@ function normalizeColorId(raw) {
   const hex = normalizeHexColor(v);
   if (hex) return hex;
 
-  const allowed = new Set(['cream', 'sun', 'pink', 'white', 'sky', 'mint', 'lavender']);
+  const allowed = new Set(['cream', 'sun', 'pink', 'red', 'orange', 'white', 'sky', 'cyan', 'teal', 'mint', 'green', 'lavender', 'indigo']);
   if (allowed.has(v)) return v;
 
   // Legacy ids
@@ -503,7 +509,7 @@ export function NotesProvider({ userId, children }) {
         preview: '',
         content: cloneDoc(EMPTY_DOC),
         searchText: '',
-        colorId: 'mist',
+        colorId: 'cream',
         folderId: null,
         pinned: false,
         isTrashed: false,
