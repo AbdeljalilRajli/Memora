@@ -80,7 +80,7 @@ function ArrowIcon({ dir = 'right' }) {
 }
 
 export function DashboardPane({ view = 'notes', onOpenEditor }) {
-  const { notes, folders, activeId, setActiveId, createNote, updateNote, setNoteFolder, createFolder, updateFolder, deleteFolder, reorderFolders } = useNotes();
+  const { notes, folders, activeId, setActiveId, createNote, setNoteFolder, createFolder, updateFolder, deleteFolder, reorderFolders } = useNotes();
   const { push } = useToast();
   const [tab, setTab] = useState('today');
   const [query, setQuery] = useState('');

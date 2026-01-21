@@ -466,7 +466,7 @@ export function NotesProvider({ userId, children }) {
     return () => {
       cancelled = true;
     };
-  }, [flushSave, userId]);
+  }, [flushSave, isMissingColumnError, isMissingTableError, userId]);
 
   useEffect(() => {
     latestRef.current = { userId, notes, folders };
