@@ -691,7 +691,7 @@ export default function LandingPageNew() {
                 animate={reduceMotion ? undefined : { y: [0, -10, 0] }}
                 transition={reduceMotion ? undefined : { duration: 7.5, ease: 'easeInOut', repeat: Infinity }}
               >
-                <ScreenshotFrame title="Dashboard" src="/dashboard.png" alt="Memora dashboard" />
+                <ScreenshotFrame title="Dashboard" src="/memora-dashboard.png" alt="Memora dashboard" />
               </motion.div>
 
               <div
@@ -987,7 +987,7 @@ export default function LandingPageNew() {
                         opacity: 0.75,
                       }}
                     />
-                    <ScreenshotFrame title="Memora" src="/dashboard.png" alt="Memora dashboard" />
+                    <ScreenshotFrame title="Memora" src="/memora-dashboard.png" alt="Memora dashboard" />
                   </div>
                 </motion.div>
               </div>
