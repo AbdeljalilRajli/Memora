@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
@@ -50,12 +50,53 @@ function isAfter(dateStr, minDate) {
   return Number.isFinite(t) && t >= minDate.getTime();
 }
 
+function PinIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M12 17v5" />
+      <path d="M9 3h6l1 5 2 2v2H6v-2l2-2 1-5Z" />
+    </svg>
+  );
+}
+
+function ArrowIcon({ dir = 'right' }) {
+  const rotate = dir === 'left' ? '180deg' : '0deg';
+  return (
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      style={{ transform: `rotate(${rotate})` }}
+    >
+      <path d="M9 18l6-6-6-6" />
+    </svg>
+  );
+}
+
 export function DashboardPane({ view = 'notes', onOpenEditor }) {
-  const { notes, folders, activeId, setActiveId, createNote, updateNote, createFolder, updateFolder, deleteFolder } = useNotes();
+  const { notes, folders, activeId, setActiveId, createNote, updateNote, setNoteFolder, createFolder, updateFolder, deleteFolder, reorderFolders } = useNotes();
   const { push } = useToast();
   const [tab, setTab] = useState('today');
   const [query, setQuery] = useState('');
   const [folderFilter, setFolderFilter] = useState({ type: 'all' });
+  const [dragOverFolderId, setDragOverFolderId] = useState(null);
+  const [dropFlashId, setDropFlashId] = useState(null);
+
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteId, setDeleteId] = useState(null);
+  const [deleteMoveTo, setDeleteMoveTo] = useState('');
+
+  const folderRowRef = useRef(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const folderDragMime = 'application/x-memora-folder-id';
 
   const primaryGradientSx = useMemo(
     () => ({
@@ -123,9 +164,9 @@ export function DashboardPane({ view = 'notes', onOpenEditor }) {
       })
       .filter((n) => {
         if (!q) return true;
-        const title = (n.title || '').toLowerCase();
-        const preview = (n.preview || '').toLowerCase();
-        return title.includes(q) || preview.includes(q);
+        const fallback = `${n.title || ''} ${n.description || ''} ${n.preview || ''}`.toLowerCase();
+        const haystack = (n.searchText || fallback).toLowerCase();
+        return haystack.includes(q);
       });
   }, [folderFilter, query, timeScopedNotes, view]);
 
@@ -144,9 +185,48 @@ export function DashboardPane({ view = 'notes', onOpenEditor }) {
 
   const recentFolders = useMemo(() => {
     const copy = [...folders];
-    copy.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
-    return copy.slice(0, 6);
+    copy.sort((a, b) => {
+      const ap = Boolean(a?.pinned);
+      const bp = Boolean(b?.pinned);
+      if (ap !== bp) return bp ? 1 : -1;
+
+      const aoRaw = a?.sortOrder;
+      const boRaw = b?.sortOrder;
+      const ao = typeof aoRaw === 'number' ? aoRaw : Number(aoRaw);
+      const bo = typeof boRaw === 'number' ? boRaw : Number(boRaw);
+      const aoOk = Number.isFinite(ao) ? ao : new Date(a?.updatedAt || 0).getTime();
+      const boOk = Number.isFinite(bo) ? bo : new Date(b?.updatedAt || 0).getTime();
+      if (aoOk !== boOk) return boOk - aoOk;
+
+      return new Date(b?.updatedAt || 0).getTime() - new Date(a?.updatedAt || 0).getTime();
+    });
+    return copy;
   }, [folders]);
+
+  useEffect(() => {
+    const el = folderRowRef.current;
+    if (!el) return;
+
+    const update = () => {
+      const max = el.scrollWidth - el.clientWidth;
+      setCanScrollLeft(el.scrollLeft > 2);
+      setCanScrollRight(max > 2 && el.scrollLeft < max - 2);
+    };
+
+    update();
+    el.addEventListener('scroll', update, { passive: true });
+    window.addEventListener('resize', update);
+    return () => {
+      el.removeEventListener('scroll', update);
+      window.removeEventListener('resize', update);
+    };
+  }, [recentFolders.length]);
+
+  const scrollFoldersBy = (dx) => {
+    const el = folderRowRef.current;
+    if (!el) return;
+    el.scrollBy({ left: dx, behavior: 'smooth' });
+  };
 
   const onNewNote = () => {
     createNote();
@@ -175,6 +255,13 @@ export function DashboardPane({ view = 'notes', onOpenEditor }) {
     closeFolderMenu();
   };
 
+  const toggleFolderPin = async (id) => {
+    const f = folders.find((x) => x.id === id);
+    if (!f) return;
+    await updateFolder(id, { pinned: !Boolean(f.pinned) });
+    closeFolderMenu();
+  };
+
   const onApplyEditFolder = async () => {
     if (!editId) return;
     await updateFolder(editId, { name: editName, color: editColor });
@@ -183,17 +270,64 @@ export function DashboardPane({ view = 'notes', onOpenEditor }) {
 
   const onDeleteFolder = async (id) => {
     closeFolderMenu();
-    const ok = window.confirm('Delete this folder? Notes inside will become Unfiled.');
-    if (!ok) return;
-    await deleteFolder(id);
-    setFolderFilter((prev) => (prev.type === 'folder' && prev.id === id ? { type: 'unfiled' } : prev));
+
+    const noteCount = folderCounts.get(id) || 0;
+    if (!noteCount) {
+      const ok = window.confirm('Delete this folder?');
+      if (!ok) return;
+      await deleteFolder(id);
+      setFolderFilter((prev) => (prev.type === 'folder' && prev.id === id ? { type: 'unfiled' } : prev));
+      return;
+    }
+
+    setDeleteId(id);
+    setDeleteMoveTo('');
+    setDeleteOpen(true);
+  };
+
+  const onConfirmDeleteFolder = async () => {
+    if (!deleteId) return;
+    try {
+      const target = deleteMoveTo ? deleteMoveTo : null;
+      await deleteFolder(deleteId, { moveToFolderId: target });
+      setFolderFilter((prev) => (prev.type === 'folder' && prev.id === deleteId ? { type: 'unfiled' } : prev));
+    } catch (err) {
+      push(err?.message || 'Failed to delete folder');
+    } finally {
+      setDeleteOpen(false);
+      setDeleteId(null);
+      setDeleteMoveTo('');
+    }
   };
 
   const onDropToFolder = (e, targetFolderId) => {
     e.preventDefault();
     const noteId = e.dataTransfer.getData('text/plain');
     if (!noteId) return;
-    updateNote(noteId, { folderId: targetFolderId || null });
+    Promise.resolve(setNoteFolder(noteId, targetFolderId || null)).catch(() => {
+      push('Failed to move note');
+    });
+    setDragOverFolderId(null);
+    setDropFlashId(targetFolderId || 'unfiled');
+    window.setTimeout(() => setDropFlashId(null), 260);
+  };
+
+  const onDropFolderReorder = async (e, targetFolderId) => {
+    e.preventDefault();
+    const sourceId = e.dataTransfer.getData(folderDragMime);
+    if (!sourceId) return;
+    setDragOverFolderId(null);
+    await reorderFolders({ sourceId, targetId: targetFolderId });
+  };
+
+  const onFolderCardDrop = async (e, targetFolderId) => {
+    const sourceId = e.dataTransfer.getData(folderDragMime);
+    if (sourceId) {
+      await onDropFolderReorder(e, targetFolderId);
+      return;
+    }
+
+    onDropToFolder(e, targetFolderId);
   };
 
   const onDragOverFolder = (e) => {
@@ -309,7 +443,28 @@ export function DashboardPane({ view = 'notes', onOpenEditor }) {
             </div>
           </div>
 
-          <div className="FolderRow">
+          <div className={`FolderScroller${canScrollLeft ? ' canLeft' : ''}${canScrollRight ? ' canRight' : ''}`}>
+            <button
+              type="button"
+              className={canScrollLeft ? 'FolderScrollButton isLeft' : 'FolderScrollButton isLeft isDisabled'}
+              onClick={() => scrollFoldersBy(-280)}
+              disabled={!canScrollLeft}
+              aria-label="Scroll folders left"
+            >
+              <ArrowIcon dir="left" />
+            </button>
+
+            <button
+              type="button"
+              className={canScrollRight ? 'FolderScrollButton isRight' : 'FolderScrollButton isRight isDisabled'}
+              onClick={() => scrollFoldersBy(280)}
+              disabled={!canScrollRight}
+              aria-label="Scroll folders right"
+            >
+              <ArrowIcon dir="right" />
+            </button>
+
+            <div ref={folderRowRef} className="FolderRow" role="list" aria-label="Folders">
           <div
             className={folderFilter.type === 'all' ? 'FolderCard isActive isBlue' : 'FolderCard isBlue'}
             onClick={() => setFolderFilter({ type: 'all' })}
@@ -339,10 +494,16 @@ export function DashboardPane({ view = 'notes', onOpenEditor }) {
           </div>
 
           <div
-            className={folderFilter.type === 'unfiled' ? 'FolderCard isActive isYellow' : 'FolderCard isYellow'}
+            className={
+              folderFilter.type === 'unfiled'
+                ? `FolderCard isActive isYellow${dragOverFolderId === 'unfiled' ? ' isDropTarget' : ''}${dropFlashId === 'unfiled' ? ' isDropFlash' : ''}`
+                : `FolderCard isYellow${dragOverFolderId === 'unfiled' ? ' isDropTarget' : ''}${dropFlashId === 'unfiled' ? ' isDropFlash' : ''}`
+            }
             onClick={() => setFolderFilter({ type: 'unfiled' })}
             onDrop={(e) => onDropToFolder(e, null)}
             onDragOver={onDragOverFolder}
+            onDragEnter={() => setDragOverFolderId('unfiled')}
+            onDragLeave={() => setDragOverFolderId(null)}
             role="button"
             tabIndex={0}
           >
@@ -359,18 +520,32 @@ export function DashboardPane({ view = 'notes', onOpenEditor }) {
               key={f.id}
               className={
                 folderFilter.type === 'folder' && folderFilter.id === f.id
-                  ? `FolderCard isActive ${folderColorClass(f.color)}`
-                  : `FolderCard ${folderColorClass(f.color)}`
+                  ? `FolderCard isActive ${folderColorClass(f.color)}${f.pinned ? ' isPinned' : ''}${dragOverFolderId === f.id ? ' isDropTarget' : ''}${dropFlashId === f.id ? ' isDropFlash' : ''}`
+                  : `FolderCard ${folderColorClass(f.color)}${f.pinned ? ' isPinned' : ''}${dragOverFolderId === f.id ? ' isDropTarget' : ''}${dropFlashId === f.id ? ' isDropFlash' : ''}`
               }
               onClick={() => setFolderFilter({ type: 'folder', id: f.id })}
-              onDrop={(e) => onDropToFolder(e, f.id)}
+              onDrop={(e) => onFolderCardDrop(e, f.id)}
               onDragOver={onDragOverFolder}
+              onDragEnter={() => setDragOverFolderId(f.id)}
+              onDragLeave={() => setDragOverFolderId(null)}
               title={f.name}
               role="button"
               tabIndex={0}
+              draggable
+              onDragStart={(e) => {
+                e.dataTransfer.setData(folderDragMime, f.id);
+                e.dataTransfer.effectAllowed = 'move';
+              }}
             >
               <div className="FolderCardTop">
-                <div className="FolderBadge" aria-hidden="true" />
+                <div className="FolderBadgeWrap">
+                  <div className="FolderBadge" aria-hidden="true" />
+                  {f.pinned ? (
+                    <span className="FolderPinMark" title="Pinned" aria-hidden="true">
+                      <PinIcon />
+                    </span>
+                  ) : null}
+                </div>
                 <span className="FolderMenuButton" role="button" tabIndex={0} aria-label="Folder menu" onClick={(e) => openFolderMenu(e, f.id)}>
                   …
                 </span>
@@ -386,12 +561,16 @@ export function DashboardPane({ view = 'notes', onOpenEditor }) {
               <div className="FolderNewLabel">New folder</div>
             </div>
           </div>
+            </div>
           </div>
         </div>
       ) : null}
 
       <Menu anchorEl={folderMenuAnchor} open={folderMenuOpen} onClose={closeFolderMenu}>
         <MenuItem onClick={() => openEditFolder(folderMenuId)}>Edit</MenuItem>
+        <MenuItem onClick={() => toggleFolderPin(folderMenuId)}>
+          {folders.find((f) => f.id === folderMenuId)?.pinned ? 'Unpin' : 'Pin'}
+        </MenuItem>
         <MenuItem onClick={() => onDeleteFolder(folderMenuId)}>Delete</MenuItem>
       </Menu>
 
@@ -417,6 +596,37 @@ export function DashboardPane({ view = 'notes', onOpenEditor }) {
           </Button>
           <Button variant="contained" onClick={onApplyEditFolder} sx={primaryGradientSx}>
             Save
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={deleteOpen} onClose={() => setDeleteOpen(false)} fullWidth maxWidth="xs">
+        <DialogTitle>Delete folder</DialogTitle>
+        <DialogContent>
+          <Stack spacing={2} sx={{ mt: 1 }}>
+            <Typography variant="body2" sx={{ color: 'rgba(15,23,42,0.70)', fontWeight: 700 }}>
+              Choose where to move the notes currently inside this folder.
+            </Typography>
+            <FormControl>
+              <Select value={deleteMoveTo} onChange={(e) => setDeleteMoveTo(e.target.value)} displayEmpty>
+                <MenuItem value="">Move to Unfiled</MenuItem>
+                {folders
+                  .filter((f) => f.id !== deleteId)
+                  .map((f) => (
+                    <MenuItem key={f.id} value={f.id}>
+                      {f.name}
+                    </MenuItem>
+                  ))}
+              </Select>
+            </FormControl>
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button variant="outlined" onClick={() => setDeleteOpen(false)}>
+            Cancel
+          </Button>
+          <Button variant="contained" color="error" onClick={onConfirmDeleteFolder}>
+            Delete
           </Button>
         </DialogActions>
       </Dialog>

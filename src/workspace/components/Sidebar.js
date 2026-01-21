@@ -51,7 +51,11 @@ export function Sidebar() {
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return sorted;
-    return sorted.filter((n) => (n.title || '').toLowerCase().includes(q));
+    return sorted.filter((n) => {
+      const fallback = `${n.title || ''} ${n.description || ''} ${n.preview || ''}`.toLowerCase();
+      const haystack = (n.searchText || fallback).toLowerCase();
+      return haystack.includes(q);
+    });
   }, [query, sorted]);
 
   return (

@@ -754,15 +754,86 @@ a:visited {
   gap: 12px;
   overflow-x: auto;
   padding-bottom: 4px;
+  scroll-snap-type: x mandatory;
+  scroll-padding-left: 8px;
+  scroll-behavior: smooth;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 .FolderRow::-webkit-scrollbar {
-  height: 8px;
+  display: none;
 }
 
-.FolderRow::-webkit-scrollbar-thumb {
-  background: rgba(15, 23, 42, 0.10);
-  border-radius: 999px;
+.FolderScroller {
+  position: relative;
+}
+
+.FolderScroller::before,
+.FolderScroller::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 56px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 180ms var(--ease-out);
+}
+
+.FolderScroller::before {
+  left: 0;
+  background: linear-gradient(90deg, rgba(255,255,255,0.95), rgba(255,255,255,0));
+}
+
+.FolderScroller::after {
+  right: 0;
+  background: linear-gradient(270deg, rgba(255,255,255,0.95), rgba(255,255,255,0));
+}
+
+.FolderScroller.canLeft::before {
+  opacity: 1;
+}
+
+.FolderScroller.canRight::after {
+  opacity: 1;
+}
+
+.FolderScrollButton {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 40px;
+  border-radius: 14px;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 14px 28px rgba(15, 23, 42, 0.10);
+  color: rgba(15, 23, 42, 0.82);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 2;
+}
+
+.FolderScrollButton:hover {
+  transform: translateY(-50%) translateY(-1px);
+  background: rgba(255, 255, 255, 1);
+  box-shadow: 0 18px 36px rgba(15, 23, 42, 0.12);
+}
+
+.FolderScrollButton.isDisabled {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.FolderScrollButton.isLeft {
+  left: 8px;
+}
+
+.FolderScrollButton.isRight {
+  right: 8px;
 }
 
 .FolderCard {
@@ -777,6 +848,7 @@ a:visited {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  scroll-snap-align: start;
 }
 
 .FolderCard:hover {
@@ -785,9 +857,29 @@ a:visited {
   box-shadow: 0 22px 54px rgba(15, 23, 42, 0.12);
 }
 
+.FolderCard.isDropTarget {
+  border-color: rgba(249, 110, 91, 0.75);
+  box-shadow: 0 0 0 4px rgba(249, 110, 91, 0.18), 0 22px 54px rgba(15, 23, 42, 0.12);
+}
+
+.FolderCard.isDropFlash {
+  animation: folderDropSlide 260ms var(--ease-out) both;
+  box-shadow: 0 0 0 5px rgba(46, 229, 157, 0.18), 0 22px 54px rgba(15, 23, 42, 0.12);
+}
+
+@keyframes folderDropSlide {
+  0% { transform: translateY(-2px) translateX(0); }
+  45% { transform: translateY(-2px) translateX(12px); }
+  100% { transform: translateY(-2px) translateX(0); }
+}
+
 .FolderCard.isActive {
   border-color: color-mix(in srgb, var(--primary) 40%, rgba(15, 23, 42, 0.10));
   box-shadow: 0 22px 54px rgba(15, 23, 42, 0.12);
+}
+
+.FolderCard.isPinned {
+  border-color: rgba(255, 183, 0, 0.55);
 }
 
 .FolderCardTop {
@@ -795,6 +887,32 @@ a:visited {
   align-items: center;
   justify-content: space-between;
   margin-bottom: 12px;
+}
+
+.FolderBadgeWrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.FolderPinMark {
+  width: 22px;
+  height: 22px;
+  border-radius: 11px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(15, 23, 42, 0.06);
+  color: rgba(15, 23, 42, 0.86);
+}
+
+.FolderPinMark svg {
+  width: 14px;
+  height: 14px;
+}
+
+.FolderCard.isPinned .FolderPinMark {
+  background: rgba(255, 183, 0, 0.22);
 }
 
 .FolderBadge {
@@ -826,6 +944,16 @@ a:visited {
 .FolderCard.isYellow { border-color: rgba(202, 138, 4, 0.30); box-shadow: 0 12px 26px rgba(202, 138, 4, 0.10); }
 .FolderCard.isMint { border-color: rgba(5, 150, 105, 0.26); box-shadow: 0 12px 26px rgba(5, 150, 105, 0.10); }
 .FolderCard.isLavender { border-color: rgba(124, 58, 237, 0.26); box-shadow: 0 12px 26px rgba(124, 58, 237, 0.10); }
+
+.FolderCard.isPinned {
+  border-color: rgba(255, 183, 0, 0.75);
+  box-shadow: 0 0 0 4px rgba(255, 183, 0, 0.18), 0 14px 34px rgba(15, 23, 42, 0.08);
+}
+
+.FolderCard.isPinned:hover {
+  border-color: rgba(255, 183, 0, 0.90);
+  box-shadow: 0 0 0 4px rgba(255, 183, 0, 0.18), 0 22px 54px rgba(15, 23, 42, 0.12);
+}
 
 .FolderCard.isBlue .FolderBadge { background: rgba(37, 99, 235, 0.20); }
 .FolderCard.isPeach .FolderBadge { background: rgba(234, 88, 12, 0.20); }

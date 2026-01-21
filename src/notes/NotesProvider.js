@@ -176,6 +176,15 @@ function deriveDescription(note) {
   return derivePreview(note?.content).trim();
 }
 
+function deriveSearchText(note) {
+  const title = (note?.title || '').trim();
+  const description = (note?.description || '').trim();
+  const preview = (note?.preview || '').trim();
+  const contentText = extractTextFromJSON(note?.content);
+  const combined = `${title} ${description} ${preview} ${contentText}`;
+  return combined.replace(/\s+/g, ' ').trim().toLowerCase();
+}
+
 const EMPTY_DOC = {
   type: 'doc',
   content: [
@@ -192,7 +201,7 @@ function cloneDoc(doc) {
 
 function fromDbNote(row) {
   const content = row?.content ?? cloneDoc(EMPTY_DOC);
-  return {
+  const note = {
     id: row.id,
     title: row.title ?? '',
     description: row.description ?? '',
@@ -207,6 +216,9 @@ function fromDbNote(row) {
     createdAt: row.created_at ?? new Date().toISOString(),
     updatedAt: row.updated_at ?? new Date().toISOString(),
   };
+
+  note.searchText = deriveSearchText(note);
+  return note;
 }
 
 function fromDbFolder(row) {
@@ -214,9 +226,30 @@ function fromDbFolder(row) {
     id: row.id,
     name: row.name ?? 'Untitled',
     color: row.color ?? 'blue',
+    pinned: Boolean(row?.pinned),
+    sortOrder: typeof row?.sort_order === 'number' ? row.sort_order : row?.sort_order ?? null,
     createdAt: row.created_at ?? new Date().toISOString(),
     updatedAt: row.updated_at ?? new Date().toISOString(),
   };
+}
+
+function sortFoldersForUi(list) {
+  const copy = Array.isArray(list) ? [...list] : [];
+  copy.sort((a, b) => {
+    const ap = Boolean(a?.pinned);
+    const bp = Boolean(b?.pinned);
+    if (ap !== bp) return ap ? -1 : 1;
+
+    const ao = typeof a?.sortOrder === 'number' ? a.sortOrder : new Date(a?.updatedAt || 0).getTime();
+    const bo = typeof b?.sortOrder === 'number' ? b.sortOrder : new Date(b?.updatedAt || 0).getTime();
+    if (ao !== bo) return bo - ao;
+
+    const au = new Date(a?.updatedAt || 0).getTime();
+    const bu = new Date(b?.updatedAt || 0).getTime();
+    if (au !== bu) return bu - au;
+    return String(a?.name || '').localeCompare(String(b?.name || ''));
+  });
+  return copy;
 }
 
 export function NotesProvider({ userId, children }) {
@@ -228,13 +261,18 @@ export function NotesProvider({ userId, children }) {
   });
   const [lastCreatedId, setLastCreatedId] = useState(null);
   const [saveStatus, setSaveStatus] = useState('saved');
-  const latestRef = useRef({ userId, notes });
+  const latestRef = useRef({ userId, notes, folders });
   const dirtyIdsRef = useRef(new Set());
   const foldersTableRef = useRef('folders');
 
   const isMissingTableError = useCallback((error) => {
     const msg = (error?.message || '').toLowerCase();
     return msg.includes("could not find table") && msg.includes('schema cache');
+  }, []);
+
+  const isMissingColumnError = useCallback((error) => {
+    const msg = (error?.message || '').toLowerCase();
+    return msg.includes('column') && msg.includes('does not exist');
   }, []);
 
   const canPersistNote = useCallback((note) => {
@@ -338,17 +376,28 @@ export function NotesProvider({ userId, children }) {
 
       const fetchFolders = async () => {
         const first = foldersTableRef.current || 'folders';
-        const query = (table) =>
+
+        const queryWithColumns = (table, columns) =>
           supabase
             .from(table)
-            .select('id, user_id, name, color, created_at, updated_at')
-            .eq('user_id', userId)
-            .order('updated_at', { ascending: false });
+            .select(columns)
+            .eq('user_id', userId);
 
-        let res = await query(first);
+        const columnsV2 = 'id, user_id, name, color, pinned, sort_order, created_at, updated_at';
+        const columnsV1 = 'id, user_id, name, color, created_at, updated_at';
+
+        const run = async (table) => {
+          let res = await queryWithColumns(table, columnsV2).order('pinned', { ascending: false }).order('sort_order', { ascending: false }).order('updated_at', { ascending: false });
+          if (res.error && isMissingColumnError(res.error)) {
+            res = await queryWithColumns(table, columnsV1).order('updated_at', { ascending: false });
+          }
+          return res;
+        };
+
+        let res = await run(first);
         if (res.error && isMissingTableError(res.error)) {
           const other = first === 'folders' ? 'folder' : 'folders';
-          const retry = await query(other);
+          const retry = await run(other);
           if (!retry.error) {
             foldersTableRef.current = other;
             res = retry;
@@ -375,7 +424,7 @@ export function NotesProvider({ userId, children }) {
         console.error('Failed to load folders from Supabase:', foldersRes.error);
         setFolders([]);
       } else {
-        loadedFolders = (foldersRes.data || []).map(fromDbFolder);
+        loadedFolders = sortFoldersForUi((foldersRes.data || []).map(fromDbFolder));
         setFolders(loadedFolders);
       }
 
@@ -420,8 +469,8 @@ export function NotesProvider({ userId, children }) {
   }, [flushSave, userId]);
 
   useEffect(() => {
-    latestRef.current = { userId, notes };
-  }, [notes, userId]);
+    latestRef.current = { userId, notes, folders };
+  }, [folders, notes, userId]);
 
   useEffect(() => {
     const key = `listem.notes.active.${userId}`;
@@ -453,6 +502,7 @@ export function NotesProvider({ userId, children }) {
         description: '',
         preview: '',
         content: cloneDoc(EMPTY_DOC),
+        searchText: '',
         colorId: 'mist',
         folderId: null,
         pinned: false,
@@ -495,6 +545,8 @@ export function NotesProvider({ userId, children }) {
         if (Object.prototype.hasOwnProperty.call(patch, 'folderId')) {
           updated.folderId = patch.folderId || null;
         }
+
+        updated.searchText = deriveSearchText(updated);
         return updated;
       });
       latestRef.current = { ...latestRef.current, notes: next };
@@ -542,28 +594,39 @@ export function NotesProvider({ userId, children }) {
   const createFolder = useCallback(
     async ({ name, color } = {}) => {
       const now = new Date().toISOString();
+      const sortOrder = Date.now();
       const id = uuidv4();
       const folder = {
         id,
         name: (name || '').trim() || 'Untitled',
         color: (color || '').trim() || 'blue',
+        pinned: false,
+        sortOrder,
         createdAt: now,
         updatedAt: now,
       };
 
-      setFolders((prev) => [folder, ...prev]);
+      setFolders((prev) => sortFoldersForUi([folder, ...prev]));
 
       if (!userId || userId === 'anonymous') {
         return id;
       }
 
-      const insertInto = async (table) =>
-        await supabase.from(table).insert({
+      const insertInto = async (table) => {
+        const payloadV2 = {
           id,
           user_id: userId,
           name: folder.name,
           color: folder.color,
-        });
+          pinned: false,
+          sort_order: sortOrder,
+        };
+        let res = await supabase.from(table).insert(payloadV2);
+        if (res.error && isMissingColumnError(res.error)) {
+          res = await supabase.from(table).insert({ id, user_id: userId, name: folder.name, color: folder.color });
+        }
+        return res;
+      };
 
       const first = foldersTableRef.current || 'folders';
       let res = await insertInto(first);
@@ -585,22 +648,33 @@ export function NotesProvider({ userId, children }) {
 
       return id;
     },
-    [isMissingTableError, userId]
+    [isMissingColumnError, isMissingTableError, userId]
   );
 
   const updateFolder = useCallback(
     async (id, patch = {}) => {
       const now = new Date().toISOString();
-      setFolders((prev) => prev.map((f) => (f.id === id ? { ...f, ...patch, updatedAt: now } : f)));
+      setFolders((prev) => sortFoldersForUi(prev.map((f) => (f.id === id ? { ...f, ...patch, updatedAt: now } : f))));
 
       if (!userId || userId === 'anonymous') return;
 
       const payload = {};
       if (Object.prototype.hasOwnProperty.call(patch, 'name')) payload.name = (patch.name || '').trim() || 'Untitled';
       if (Object.prototype.hasOwnProperty.call(patch, 'color')) payload.color = (patch.color || '').trim() || 'blue';
+      if (Object.prototype.hasOwnProperty.call(patch, 'pinned')) payload.pinned = Boolean(patch.pinned);
+      if (Object.prototype.hasOwnProperty.call(patch, 'sortOrder')) payload.sort_order = patch.sortOrder;
       if (!Object.keys(payload).length) return;
 
-      const runUpdate = async (table) => await supabase.from(table).update(payload).eq('id', id).eq('user_id', userId);
+      const runUpdate = async (table) => {
+        let res = await supabase.from(table).update(payload).eq('id', id).eq('user_id', userId);
+        if (res.error && isMissingColumnError(res.error)) {
+          const fallback = {};
+          if (Object.prototype.hasOwnProperty.call(payload, 'name')) fallback.name = payload.name;
+          if (Object.prototype.hasOwnProperty.call(payload, 'color')) fallback.color = payload.color;
+          res = await supabase.from(table).update(fallback).eq('id', id).eq('user_id', userId);
+        }
+        return res;
+      };
       const first = foldersTableRef.current || 'folders';
       let res = await runUpdate(first);
       if (res.error && isMissingTableError(res.error)) {
@@ -617,15 +691,64 @@ export function NotesProvider({ userId, children }) {
         console.error('Failed to update folder in Supabase:', res.error);
       }
     },
-    [isMissingTableError, userId]
+    [isMissingColumnError, isMissingTableError, userId]
+  );
+
+  const reorderFolders = useCallback(
+    async ({ sourceId, targetId } = {}) => {
+      if (!sourceId || !targetId || sourceId === targetId) return;
+
+      const currentFolders = sortFoldersForUi(folders);
+      const fromIndex = currentFolders.findIndex((f) => f.id === sourceId);
+      const toIndex = currentFolders.findIndex((f) => f.id === targetId);
+      if (fromIndex === -1 || toIndex === -1) return;
+
+      const copy = [...currentFolders];
+      const [moved] = copy.splice(fromIndex, 1);
+      copy.splice(toIndex, 0, moved);
+
+      const total = copy.length;
+      const updates = copy.map((f, idx) => ({ id: f.id, sortOrder: total - idx }));
+
+      setFolders(sortFoldersForUi(copy.map((f, idx) => ({ ...f, sortOrder: total - idx }))));
+
+      if (!userId || userId === 'anonymous') return;
+
+      const runUpdate = async (table, id, sortOrder) => {
+        let res = await supabase.from(table).update({ sort_order: sortOrder }).eq('id', id).eq('user_id', userId);
+        if (res.error && isMissingColumnError(res.error)) {
+          res = { ...res, error: null };
+        }
+        return res;
+      };
+
+      const table = foldersTableRef.current || 'folders';
+      const results = await Promise.all(updates.map((u) => runUpdate(table, u.id, u.sortOrder)));
+      const firstError = results.find((r) => r?.error)?.error;
+      if (firstError && isMissingTableError(firstError)) {
+        const other = table === 'folders' ? 'folder' : 'folders';
+        const retryResults = await Promise.all(updates.map((u) => runUpdate(other, u.id, u.sortOrder)));
+        const retryError = retryResults.find((r) => r?.error)?.error;
+        if (!retryError) foldersTableRef.current = other;
+      }
+    },
+    [folders, isMissingColumnError, isMissingTableError, userId]
   );
 
   const deleteFolder = useCallback(
-    async (id) => {
+    async (id, { moveToFolderId = null } = {}) => {
+      const toId = moveToFolderId || null;
+
       setFolders((prev) => prev.filter((f) => f.id !== id));
-      setNotes((prev) => prev.map((n) => (n.folderId === id ? { ...n, folderId: null } : n)));
+      setNotes((prev) => prev.map((n) => (n.folderId === id ? { ...n, folderId: toId } : n)));
 
       if (!userId || userId === 'anonymous') return;
+
+      await supabase
+        .from('notes')
+        .update({ folder_id: toId })
+        .eq('user_id', userId)
+        .eq('folder_id', id);
 
       const runDelete = async (table) => await supabase.from(table).delete().eq('id', id).eq('user_id', userId);
       const first = foldersTableRef.current || 'folders';
@@ -667,6 +790,50 @@ export function NotesProvider({ userId, children }) {
       updateNote(id, patch);
     },
     [updateNote]
+  );
+
+  const setNoteFolder = useCallback(
+    async (id, folderId) => {
+      const now = new Date().toISOString();
+      const nextFolderId = folderId || null;
+
+      const prevNotes = latestRef.current.notes || [];
+      const prevNote = prevNotes.find((n) => n.id === id) || null;
+
+      const nextNotes = prevNotes.map((n) => {
+        if (n.id !== id) return n;
+        const updated = { ...n, folderId: nextFolderId, updatedAt: now };
+        updated.searchText = deriveSearchText(updated);
+        return updated;
+      });
+
+      latestRef.current = { ...latestRef.current, notes: nextNotes };
+      setNotes(nextNotes);
+
+      if (!userId || userId === 'anonymous') return;
+
+      const { error } = await supabase
+        .from('notes')
+        .update({ folder_id: nextFolderId })
+        .eq('id', id)
+        .eq('user_id', userId);
+
+      if (!error) return;
+
+      if (prevNote) {
+        const rolledBack = nextNotes.map((n) => {
+          if (n.id !== id) return n;
+          const updated = { ...n, folderId: prevNote.folderId || null, updatedAt: now };
+          updated.searchText = deriveSearchText(updated);
+          return updated;
+        });
+        latestRef.current = { ...latestRef.current, notes: rolledBack };
+        setNotes(rolledBack);
+      }
+
+      throw error;
+    },
+    [userId]
   );
 
   const saveNote = useCallback(
@@ -796,6 +963,7 @@ export function NotesProvider({ userId, children }) {
       setActiveId,
       createNote,
       updateNote,
+      setNoteFolder,
       updateNoteContent,
       deleteNote,
       trashNote,
@@ -805,6 +973,7 @@ export function NotesProvider({ userId, children }) {
       createFolder,
       updateFolder,
       deleteFolder,
+      reorderFolders,
       colors: DEFAULT_COLORS,
       saveStatus,
       saveNote,
@@ -829,8 +998,10 @@ export function NotesProvider({ userId, children }) {
       saveStatus,
       trashNote,
       togglePin,
+      reorderFolders,
       updateFolder,
       updateNote,
+      setNoteFolder,
       updateNoteContent,
     ]
   );

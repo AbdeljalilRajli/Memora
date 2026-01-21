@@ -19,6 +19,7 @@ export function EditorPane() {
     colors,
     folders,
     updateNote,
+    setNoteFolder,
     lastCreatedId,
     clearLastCreatedId,
   } = useNotes();
@@ -193,7 +194,9 @@ export function EditorPane() {
                   displayEmpty
                   onChange={(e) => {
                     const next = e.target.value;
-                    updateNote(note.id, { folderId: next || null });
+                    Promise.resolve(setNoteFolder(note.id, next || null)).catch((err) => {
+                      push(err?.message || 'Failed to move note');
+                    });
                   }}
                   sx={{
                     borderRadius: 999,
