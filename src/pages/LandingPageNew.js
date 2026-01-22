@@ -521,16 +521,6 @@ export default function LandingPageNew() {
 
   return (
     <div className="LandingPageNew min-h-screen" style={{ background: 'var(--lp-bg-2)', color: 'var(--lp-text)' }}>
-      <div
-        className="pointer-events-none fixed inset-0 -z-10"
-        aria-hidden="true"
-        style={{
-          background:
-            'radial-gradient(1100px 700px at 18% 0%, rgb(var(--lp-accent-secondary-rgb) / 0.16), transparent 62%), radial-gradient(1000px 680px at 82% 12%, rgb(var(--lp-accent-primary-rgb) / 0.14), transparent 60%), radial-gradient(900px 650px at 55% 92%, rgb(var(--lp-accent-tertiary-rgb) / 0.12), transparent 62%)',
-          opacity: 0.52,
-        }}
-      />
-
       <header
         className="sticky top-0 z-50 border-b"
         style={{
@@ -591,7 +581,6 @@ export default function LandingPageNew() {
           style={{ background: 'linear-gradient(180deg, var(--lp-bg), var(--lp-bg-2))' }}
           data-reduce-motion={reduceMotion ? 'true' : 'false'}
         >
-          <div className="HeroAurora" aria-hidden="true" />
           <Container>
             <div ref={heroRef} className="grid items-center gap-10 pb-16 pt-10 lg:grid-cols-2 lg:pb-24">
               <motion.div variants={heroContainer} initial={reduceMotion ? false : 'hidden'} animate="show">
