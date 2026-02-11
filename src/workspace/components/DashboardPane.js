@@ -101,8 +101,20 @@ export function DashboardPane({ view = 'notes', onOpenEditor }) {
   const [deleteMoveTo, setDeleteMoveTo] = useState('');
 
   const folderRowRef = useRef(null);
+  const searchInputRef = useRef(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
+
+  useEffect(() => {
+    const onKeyDown = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, []);
 
   const folderDragMime = 'application/x-memora-folder-id';
 
@@ -393,8 +405,9 @@ export function DashboardPane({ view = 'notes', onOpenEditor }) {
               size="small"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search notes…"
+              placeholder="Search notes… (Ctrl+K)"
               fullWidth
+              inputRef={searchInputRef}
               InputProps={{
                 endAdornment: query.trim() ? (
                   <Button size="small" onClick={() => setQuery('')} sx={{ minWidth: 0, px: 1.25, fontWeight: 800 }}>
@@ -473,102 +486,102 @@ export function DashboardPane({ view = 'notes', onOpenEditor }) {
             </button>
 
             <div ref={folderRowRef} className="FolderRow" role="list" aria-label="Folders">
-          <div
-            className={folderFilter.type === 'all' ? 'FolderCard isActive isBlue' : 'FolderCard isBlue'}
-            onClick={() => setFolderFilter({ type: 'all' })}
-            role="button"
-            tabIndex={0}
-          >
-            <div className="FolderCardTop">
-              <div className="FolderBadge" aria-hidden="true" />
-              <div className="FolderMenu" aria-hidden="true">…</div>
-            </div>
-            <div className="FolderCardTitle">All Notes</div>
-            <div className="FolderCardMeta">{allCount} notes</div>
-          </div>
-
-          <div
-            className={folderFilter.type === 'pinned' ? 'FolderCard isActive isPeach' : 'FolderCard isPeach'}
-            onClick={() => setFolderFilter({ type: 'pinned' })}
-            role="button"
-            tabIndex={0}
-          >
-            <div className="FolderCardTop">
-              <div className="FolderBadge" aria-hidden="true" />
-              <div className="FolderMenu" aria-hidden="true">…</div>
-            </div>
-            <div className="FolderCardTitle">Pinned</div>
-            <div className="FolderCardMeta">{pinnedCount} notes</div>
-          </div>
-
-          <div
-            className={
-              folderFilter.type === 'unfiled'
-                ? `FolderCard isActive isYellow${dragOverFolderId === 'unfiled' ? ' isDropTarget' : ''}${dropFlashId === 'unfiled' ? ' isDropFlash' : ''}`
-                : `FolderCard isYellow${dragOverFolderId === 'unfiled' ? ' isDropTarget' : ''}${dropFlashId === 'unfiled' ? ' isDropFlash' : ''}`
-            }
-            onClick={() => setFolderFilter({ type: 'unfiled' })}
-            onDrop={(e) => onDropToFolder(e, null)}
-            onDragOver={onDragOverFolder}
-            onDragEnter={() => setDragOverFolderId('unfiled')}
-            onDragLeave={() => setDragOverFolderId(null)}
-            role="button"
-            tabIndex={0}
-          >
-            <div className="FolderCardTop">
-              <div className="FolderBadge" aria-hidden="true" />
-              <div className="FolderMenu" aria-hidden="true">…</div>
-            </div>
-            <div className="FolderCardTitle">Unfiled</div>
-            <div className="FolderCardMeta">{unfiledCount} notes</div>
-          </div>
-
-          {recentFolders.map((f) => (
-            <div
-              key={f.id}
-              className={
-                folderFilter.type === 'folder' && folderFilter.id === f.id
-                  ? `FolderCard isActive ${folderColorClass(f.color)}${f.pinned ? ' isPinned' : ''}${dragOverFolderId === f.id ? ' isDropTarget' : ''}${dropFlashId === f.id ? ' isDropFlash' : ''}`
-                  : `FolderCard ${folderColorClass(f.color)}${f.pinned ? ' isPinned' : ''}${dragOverFolderId === f.id ? ' isDropTarget' : ''}${dropFlashId === f.id ? ' isDropFlash' : ''}`
-              }
-              onClick={() => setFolderFilter({ type: 'folder', id: f.id })}
-              onDrop={(e) => onFolderCardDrop(e, f.id)}
-              onDragOver={onDragOverFolder}
-              onDragEnter={() => setDragOverFolderId(f.id)}
-              onDragLeave={() => setDragOverFolderId(null)}
-              title={f.name}
-              role="button"
-              tabIndex={0}
-              draggable
-              onDragStart={(e) => {
-                e.dataTransfer.setData(folderDragMime, f.id);
-                e.dataTransfer.effectAllowed = 'move';
-              }}
-            >
-              <div className="FolderCardTop">
-                <div className="FolderBadgeWrap">
+              <div
+                className={folderFilter.type === 'all' ? 'FolderCard isActive isBlue' : 'FolderCard isBlue'}
+                onClick={() => setFolderFilter({ type: 'all' })}
+                role="button"
+                tabIndex={0}
+              >
+                <div className="FolderCardTop">
                   <div className="FolderBadge" aria-hidden="true" />
-                  {f.pinned ? (
-                    <span className="FolderPinMark" title="Pinned" aria-hidden="true">
-                      <PinIcon />
-                    </span>
-                  ) : null}
+                  <div className="FolderMenu" aria-hidden="true">…</div>
                 </div>
-                <span className="FolderMenuButton" role="button" tabIndex={0} aria-label="Folder menu" onClick={(e) => openFolderMenu(e, f.id)}>
-                  …
-                </span>
+                <div className="FolderCardTitle">All Notes</div>
+                <div className="FolderCardMeta">{allCount} notes</div>
               </div>
-              <div className="FolderCardTitle">{f.name}</div>
-              <div className="FolderCardMeta">{folderCounts.get(f.id) || 0} notes</div>
-            </div>
-          ))}
 
-          <div className="FolderCard isNew" onClick={openCreateFolder} role="button" tabIndex={0}>
-            <div className="FolderNewInner">
-              <div className="FolderNewPlus">+</div>
-              <div className="FolderNewLabel">New folder</div>
-            </div>
-          </div>
+              <div
+                className={folderFilter.type === 'pinned' ? 'FolderCard isActive isPeach' : 'FolderCard isPeach'}
+                onClick={() => setFolderFilter({ type: 'pinned' })}
+                role="button"
+                tabIndex={0}
+              >
+                <div className="FolderCardTop">
+                  <div className="FolderBadge" aria-hidden="true" />
+                  <div className="FolderMenu" aria-hidden="true">…</div>
+                </div>
+                <div className="FolderCardTitle">Pinned</div>
+                <div className="FolderCardMeta">{pinnedCount} notes</div>
+              </div>
+
+              <div
+                className={
+                  folderFilter.type === 'unfiled'
+                    ? `FolderCard isActive isYellow${dragOverFolderId === 'unfiled' ? ' isDropTarget' : ''}${dropFlashId === 'unfiled' ? ' isDropFlash' : ''}`
+                    : `FolderCard isYellow${dragOverFolderId === 'unfiled' ? ' isDropTarget' : ''}${dropFlashId === 'unfiled' ? ' isDropFlash' : ''}`
+                }
+                onClick={() => setFolderFilter({ type: 'unfiled' })}
+                onDrop={(e) => onDropToFolder(e, null)}
+                onDragOver={onDragOverFolder}
+                onDragEnter={() => setDragOverFolderId('unfiled')}
+                onDragLeave={() => setDragOverFolderId(null)}
+                role="button"
+                tabIndex={0}
+              >
+                <div className="FolderCardTop">
+                  <div className="FolderBadge" aria-hidden="true" />
+                  <div className="FolderMenu" aria-hidden="true">…</div>
+                </div>
+                <div className="FolderCardTitle">Unfiled</div>
+                <div className="FolderCardMeta">{unfiledCount} notes</div>
+              </div>
+
+              {recentFolders.map((f) => (
+                <div
+                  key={f.id}
+                  className={
+                    folderFilter.type === 'folder' && folderFilter.id === f.id
+                      ? `FolderCard isActive ${folderColorClass(f.color)}${f.pinned ? ' isPinned' : ''}${dragOverFolderId === f.id ? ' isDropTarget' : ''}${dropFlashId === f.id ? ' isDropFlash' : ''}`
+                      : `FolderCard ${folderColorClass(f.color)}${f.pinned ? ' isPinned' : ''}${dragOverFolderId === f.id ? ' isDropTarget' : ''}${dropFlashId === f.id ? ' isDropFlash' : ''}`
+                  }
+                  onClick={() => setFolderFilter({ type: 'folder', id: f.id })}
+                  onDrop={(e) => onFolderCardDrop(e, f.id)}
+                  onDragOver={onDragOverFolder}
+                  onDragEnter={() => setDragOverFolderId(f.id)}
+                  onDragLeave={() => setDragOverFolderId(null)}
+                  title={f.name}
+                  role="button"
+                  tabIndex={0}
+                  draggable
+                  onDragStart={(e) => {
+                    e.dataTransfer.setData(folderDragMime, f.id);
+                    e.dataTransfer.effectAllowed = 'move';
+                  }}
+                >
+                  <div className="FolderCardTop">
+                    <div className="FolderBadgeWrap">
+                      <div className="FolderBadge" aria-hidden="true" />
+                      {f.pinned ? (
+                        <span className="FolderPinMark" title="Pinned" aria-hidden="true">
+                          <PinIcon />
+                        </span>
+                      ) : null}
+                    </div>
+                    <span className="FolderMenuButton" role="button" tabIndex={0} aria-label="Folder menu" onClick={(e) => openFolderMenu(e, f.id)}>
+                      …
+                    </span>
+                  </div>
+                  <div className="FolderCardTitle">{f.name}</div>
+                  <div className="FolderCardMeta">{folderCounts.get(f.id) || 0} notes</div>
+                </div>
+              ))}
+
+              <div className="FolderCard isNew" onClick={openCreateFolder} role="button" tabIndex={0}>
+                <div className="FolderNewInner">
+                  <div className="FolderNewPlus">+</div>
+                  <div className="FolderNewLabel">New folder</div>
+                </div>
+              </div>
             </div>
           </div>
         </div>

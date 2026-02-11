@@ -1,6 +1,19 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../auth/AuthProvider';
+
+function getPasswordStrength(pw) {
+  if (!pw) return { level: 0, label: '' };
+  let score = 0;
+  if (pw.length >= 6) score++;
+  if (pw.length >= 10) score++;
+  if (/[A-Z]/.test(pw) && /[a-z]/.test(pw)) score++;
+  if (/\d/.test(pw)) score++;
+  if (/[^A-Za-z0-9]/.test(pw)) score++;
+  if (score <= 1) return { level: 1, label: 'Weak' };
+  if (score <= 3) return { level: 2, label: 'Medium' };
+  return { level: 3, label: 'Strong' };
+}
 
 export default function SignupPage() {
   const { signUp } = useAuth();
@@ -10,7 +23,8 @@ export default function SignupPage() {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
 
-  const navigate = useNavigate();
+  const strength = useMemo(() => getPasswordStrength(password), [password]);
+  const strengthClass = strength.level === 1 ? 'is-weak' : strength.level === 2 ? 'is-medium' : 'is-strong';
 
   const onSubmit = async (e) => {
     e.preventDefault();
@@ -20,9 +34,8 @@ export default function SignupPage() {
 
     try {
       await signUp({ email: email.trim(), password });
-      setSuccess('Account created. You can now sign in.');
+      setSuccess('Check your inbox! We sent a confirmation link to ' + email.trim() + '. Please click it to activate your account.');
       setSubmitting(false);
-      setTimeout(() => navigate('/login', { replace: true }), 800);
     } catch (err) {
       setError(err?.message || 'Failed to create account');
       setSubmitting(false);
@@ -35,9 +48,12 @@ export default function SignupPage() {
         <Link className="AuthHomeLink" to="/">
           ← Back to home
         </Link>
+        <div className="AuthLogo">
+          <img src="/logo-memora.png" alt="Memora" />
+        </div>
         <div className="AuthHeader">
           <div className="AuthTitle">Create your account</div>
-          <div className="AuthSubtitle">Start taking Notion-style notes</div>
+          <div className="AuthSubtitle">Your knowledge, beautifully organized</div>
         </div>
 
         <form onSubmit={onSubmit} className="AuthForm">
@@ -63,6 +79,21 @@ export default function SignupPage() {
               onChange={(e) => setPassword(e.target.value)}
               required
             />
+            {password && (
+              <>
+                <div className="PasswordStrength">
+                  {[1, 2, 3].map((i) => (
+                    <div
+                      key={i}
+                      className={`PasswordStrengthBar${i <= strength.level ? ` is-active ${strengthClass}` : ''}`}
+                    />
+                  ))}
+                </div>
+                <div className={`PasswordStrengthLabel ${strengthClass}`}>
+                  {strength.label}
+                </div>
+              </>
+            )}
           </label>
 
           {error ? <div className="AuthError">{error}</div> : null}

@@ -336,79 +336,87 @@ export function NoteCard({ note, highlightQuery = '', selected = false, view = '
             <Typography variant="caption" sx={{ color: 'rgba(30,30,30,0.58)', fontWeight: 700 }}>
               {new Date(note.updatedAt).toLocaleString()}
             </Typography>
+            {(note.description || note.preview) && (
+              <>
+                <span className="Dot" aria-hidden="true" />
+                <span className="NoteCardWordCount">
+                  {(note.description || note.preview || '').split(/\s+/).filter(Boolean).length} words
+                </span>
+              </>
+            )}
           </Stack>
 
           {exportOpen && exportMenuReady
             ? createPortal(
-                <div
-                  ref={exportMenuRef}
-                  className="NoteCardDropdown isPortal"
-                  role="dialog"
-                  aria-label="Export note"
-                  onMouseDown={(e) => {
-                    e.stopPropagation();
-                  }}
-                >
-                  <div className="NoteCardDropdownTitle">Export</div>
-                  <div className="NoteCardDropdownDesc">PDF, Markdown, TXT or Print.</div>
-                  <div className="NoteCardDropdownRow">
-                    <button
-                      className="MiniIconButton"
-                      type="button"
-                      onClick={(e) =>
-                        withEditorContent(e, (content) =>
-                          exportPdfViaPrint({
-                            title: note.title || 'Untitled',
-                            editorHtml: content,
-                            background: resolvePrintBackground(),
-                          })
-                        )
-                      }
-                      disabled={exportLoading}
-                      title="Export PDF"
-                    >
-                      {exportLoading ? '…' : 'PDF'}
-                    </button>
-                    <button
-                      className="MiniIconButton"
-                      type="button"
-                      onClick={(e) => withEditorContent(e, (content) => exportMarkdown({ title: note.title || 'Untitled', editorHtml: content }))}
-                      disabled={exportLoading}
-                      title="Export Markdown"
-                    >
-                      {exportLoading ? '…' : 'MD'}
-                    </button>
-                    <button
-                      className="MiniIconButton"
-                      type="button"
-                      onClick={(e) => withEditorContent(e, (content) => exportTxt({ title: note.title || 'Untitled', editorContent: content }))}
-                      disabled={exportLoading}
-                      title="Export Text"
-                    >
-                      {exportLoading ? '…' : 'TXT'}
-                    </button>
-                    <button
-                      className="MiniIconButton"
-                      type="button"
-                      onClick={(e) =>
-                        withEditorContent(e, (content) => {
-                          const doc = buildStandaloneHtml({
-                            title: note.title || 'Untitled',
-                            bodyHtml: typeof content === 'string' ? content : '',
-                            background: resolvePrintBackground(),
-                          });
-                          printViaIframe({ html: doc });
+              <div
+                ref={exportMenuRef}
+                className="NoteCardDropdown isPortal"
+                role="dialog"
+                aria-label="Export note"
+                onMouseDown={(e) => {
+                  e.stopPropagation();
+                }}
+              >
+                <div className="NoteCardDropdownTitle">Export</div>
+                <div className="NoteCardDropdownDesc">PDF, Markdown, TXT or Print.</div>
+                <div className="NoteCardDropdownRow">
+                  <button
+                    className="MiniIconButton"
+                    type="button"
+                    onClick={(e) =>
+                      withEditorContent(e, (content) =>
+                        exportPdfViaPrint({
+                          title: note.title || 'Untitled',
+                          editorHtml: content,
+                          background: resolvePrintBackground(),
                         })
-                      }
-                      disabled={exportLoading}
-                      title="Print"
-                    >
-                      {exportLoading ? '…' : 'Print'}
-                    </button>
-                  </div>
-                </div>,
-                document.body
-              )
+                      )
+                    }
+                    disabled={exportLoading}
+                    title="Export PDF"
+                  >
+                    {exportLoading ? '…' : 'PDF'}
+                  </button>
+                  <button
+                    className="MiniIconButton"
+                    type="button"
+                    onClick={(e) => withEditorContent(e, (content) => exportMarkdown({ title: note.title || 'Untitled', editorHtml: content }))}
+                    disabled={exportLoading}
+                    title="Export Markdown"
+                  >
+                    {exportLoading ? '…' : 'MD'}
+                  </button>
+                  <button
+                    className="MiniIconButton"
+                    type="button"
+                    onClick={(e) => withEditorContent(e, (content) => exportTxt({ title: note.title || 'Untitled', editorContent: content }))}
+                    disabled={exportLoading}
+                    title="Export Text"
+                  >
+                    {exportLoading ? '…' : 'TXT'}
+                  </button>
+                  <button
+                    className="MiniIconButton"
+                    type="button"
+                    onClick={(e) =>
+                      withEditorContent(e, (content) => {
+                        const doc = buildStandaloneHtml({
+                          title: note.title || 'Untitled',
+                          bodyHtml: typeof content === 'string' ? content : '',
+                          background: resolvePrintBackground(),
+                        });
+                        printViaIframe({ html: doc });
+                      })
+                    }
+                    disabled={exportLoading}
+                    title="Print"
+                  >
+                    {exportLoading ? '…' : 'Print'}
+                  </button>
+                </div>
+              </div>,
+              document.body
+            )
             : null}
 
           <Stack direction="row" spacing={0.5} alignItems="center" sx={{ mt: 1.0 }} onMouseDown={(e) => e.stopPropagation()}>

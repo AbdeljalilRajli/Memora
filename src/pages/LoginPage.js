@@ -51,8 +51,11 @@ export default function LoginPage() {
         <Link className="AuthHomeLink" to="/">
           ← Back to home
         </Link>
+        <div className="AuthLogo">
+          <img src="/logo-memora.png" alt="Memora" />
+        </div>
         <div className="AuthHeader">
-          <div className="AuthTitle">Memora</div>
+          <div className="AuthTitle">Welcome back</div>
           <div className="AuthSubtitle">Sign in to your workspace</div>
         </div>
 

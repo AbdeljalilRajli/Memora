@@ -143,6 +143,17 @@ export function NoteEditor({ noteId, noteTitle, initialContent }) {
         </button>
         <button
           type="button"
+          className={editor.isActive('strike') ? 'EditorToolbarButton isActive' : 'EditorToolbarButton'}
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={() => editor.chain().focus().toggleStrike().run()}
+          aria-label="Strikethrough"
+          title="Strikethrough"
+          style={{ textDecoration: 'line-through' }}
+        >
+          S
+        </button>
+        <button
+          type="button"
           className={editor.isActive('code') ? 'EditorToolbarButton isActive' : 'EditorToolbarButton'}
           onMouseDown={(e) => e.preventDefault()}
           onClick={() => editor.chain().focus().toggleCode().run()}
@@ -165,6 +176,11 @@ export function NoteEditor({ noteId, noteTitle, initialContent }) {
       </div>
 
       <EditorContent editor={editor} />
+
+      <div className="EditorWordCount">
+        <span>{editor.storage.characterCount?.words?.() ?? editor.getText().split(/\s+/).filter(Boolean).length} words</span>
+        <span>{editor.storage.characterCount?.characters?.() ?? editor.getText().length} characters</span>
+      </div>
     </div>
   );
 }

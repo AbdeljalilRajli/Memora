@@ -1,6 +1,7 @@
-import React, { useMemo, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useMemo, useRef, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion, useReducedMotion, useScroll, useTransform } from 'framer-motion';
+import { useAuth } from '../auth/AuthProvider';
 
 function Container({ children, className = '' }) {
   return <div className={`mx-auto w-full max-w-6xl px-6 ${className}`}>{children}</div>;
@@ -191,19 +192,19 @@ function MockEditor({ compact = false }) {
                   reduceMotion
                     ? undefined
                     : {
-                        borderColor:
-                          i === 0
-                            ? ['var(--lp-border)', 'rgb(var(--lp-accent-tertiary-rgb) / 0.34)', 'var(--lp-border)']
-                            : i === 1
-                              ? ['rgb(var(--lp-accent-tertiary-rgb) / 0.34)', 'var(--lp-border)', 'rgb(var(--lp-accent-tertiary-rgb) / 0.34)']
-                              : ['var(--lp-border)', 'var(--lp-border)', 'rgb(var(--lp-accent-tertiary-rgb) / 0.34)'],
-                        background:
-                          i === 0
-                            ? ['rgb(255 255 255 / 0.02)', 'rgb(var(--lp-accent-tertiary-rgb) / 0.14)', 'rgb(255 255 255 / 0.02)']
-                            : i === 1
-                              ? ['rgb(var(--lp-accent-tertiary-rgb) / 0.14)', 'rgb(255 255 255 / 0.02)', 'rgb(var(--lp-accent-tertiary-rgb) / 0.14)']
-                              : ['rgb(255 255 255 / 0.02)', 'rgb(255 255 255 / 0.02)', 'rgb(var(--lp-accent-tertiary-rgb) / 0.14)'],
-                      }
+                      borderColor:
+                        i === 0
+                          ? ['var(--lp-border)', 'rgb(var(--lp-accent-tertiary-rgb) / 0.34)', 'var(--lp-border)']
+                          : i === 1
+                            ? ['rgb(var(--lp-accent-tertiary-rgb) / 0.34)', 'var(--lp-border)', 'rgb(var(--lp-accent-tertiary-rgb) / 0.34)']
+                            : ['var(--lp-border)', 'var(--lp-border)', 'rgb(var(--lp-accent-tertiary-rgb) / 0.34)'],
+                      background:
+                        i === 0
+                          ? ['rgb(255 255 255 / 0.02)', 'rgb(var(--lp-accent-tertiary-rgb) / 0.14)', 'rgb(255 255 255 / 0.02)']
+                          : i === 1
+                            ? ['rgb(var(--lp-accent-tertiary-rgb) / 0.14)', 'rgb(255 255 255 / 0.02)', 'rgb(var(--lp-accent-tertiary-rgb) / 0.14)']
+                            : ['rgb(255 255 255 / 0.02)', 'rgb(255 255 255 / 0.02)', 'rgb(var(--lp-accent-tertiary-rgb) / 0.14)'],
+                    }
                 }
                 transition={reduceMotion ? undefined : { duration: 2.6, repeat: Infinity, ease: 'easeInOut', delay: i * 0.12 }}
               />
@@ -254,13 +255,13 @@ function MockSearch({ compact = false }) {
               reduceMotion
                 ? undefined
                 : {
-                    background:
-                      i === 0
-                        ? ['rgb(var(--lp-accent-primary-rgb) / 0.10)', 'rgb(255 255 255 / 0.03)', 'rgb(255 255 255 / 0.03)']
-                        : i === 1
-                          ? ['rgb(255 255 255 / 0.03)', 'rgb(var(--lp-accent-primary-rgb) / 0.10)', 'rgb(255 255 255 / 0.03)']
-                          : ['rgb(255 255 255 / 0.03)', 'rgb(255 255 255 / 0.03)', 'rgb(var(--lp-accent-primary-rgb) / 0.10)'],
-                  }
+                  background:
+                    i === 0
+                      ? ['rgb(var(--lp-accent-primary-rgb) / 0.10)', 'rgb(255 255 255 / 0.03)', 'rgb(255 255 255 / 0.03)']
+                      : i === 1
+                        ? ['rgb(255 255 255 / 0.03)', 'rgb(var(--lp-accent-primary-rgb) / 0.10)', 'rgb(255 255 255 / 0.03)']
+                        : ['rgb(255 255 255 / 0.03)', 'rgb(255 255 255 / 0.03)', 'rgb(var(--lp-accent-primary-rgb) / 0.10)'],
+                }
             }
             transition={reduceMotion ? undefined : { duration: 2.7, repeat: Infinity, ease: 'easeInOut', delay: 0.05 * i }}
           >
@@ -340,9 +341,9 @@ function MockSharing({ compact = false }) {
             reduceMotion
               ? undefined
               : {
-                  borderColor: ['var(--lp-border)', 'rgb(var(--lp-accent-tertiary-rgb) / 0.30)', 'var(--lp-border)'],
-                  background: ['rgb(255 255 255 / 0.03)', 'rgb(var(--lp-accent-tertiary-rgb) / 0.10)', 'rgb(255 255 255 / 0.03)'],
-                }
+                borderColor: ['var(--lp-border)', 'rgb(var(--lp-accent-tertiary-rgb) / 0.30)', 'var(--lp-border)'],
+                background: ['rgb(255 255 255 / 0.03)', 'rgb(var(--lp-accent-tertiary-rgb) / 0.10)', 'rgb(255 255 255 / 0.03)'],
+              }
           }
           transition={reduceMotion ? undefined : { duration: 2.6, repeat: Infinity, ease: 'easeInOut' }}
         >
@@ -493,6 +494,9 @@ function MockAutosave({ compact = false }) {
 
 export default function LandingPageNew() {
   const reduceMotion = useReducedMotion();
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
   const heroRef = useRef(null);
   const { scrollYProgress } = useScroll({ target: heroRef, offset: ['start start', 'end start'] });
   const mockupY = useTransform(scrollYProgress, [0, 1], [0, -28]);
@@ -552,35 +556,163 @@ export default function LandingPageNew() {
           </nav>
 
           <div className="flex items-center gap-3">
-            <Link
-              to="/login"
-              className="hidden rounded-full border px-4 py-2 text-sm font-extrabold md:inline-flex"
-              style={{ borderColor: 'var(--lp-border)', background: 'var(--lp-surface)', color: 'var(--lp-text)' }}
+            {user ? (
+              <>
+                <span className="hidden md:inline-flex text-sm font-bold" style={{ color: 'var(--lp-text-secondary)' }}>
+                  {user.email}
+                </span>
+                <Link
+                  to="/app"
+                  className="hidden md:inline-flex items-center justify-center rounded-full px-5 py-2.5 text-sm font-extrabold"
+                  style={{
+                    background: 'linear-gradient(135deg, var(--lp-accent-primary), var(--lp-accent-secondary))',
+                    color: 'white',
+                    boxShadow: '0 22px 70px rgb(var(--lp-accent-primary-rgb) / 0.22)',
+                  }}
+                >
+                  Go to app
+                </Link>
+                <button
+                  onClick={() => signOut().then(() => navigate('/'))}
+                  className="hidden md:inline-flex rounded-full border px-4 py-2 text-sm font-extrabold"
+                  style={{ borderColor: 'var(--lp-border)', background: 'var(--lp-surface)', color: 'var(--lp-text)', cursor: 'pointer' }}
+                >
+                  Logout
+                </button>
+              </>
+            ) : (
+              <>
+                <Link
+                  to="/login"
+                  className="hidden rounded-full border px-4 py-2 text-sm font-extrabold md:inline-flex"
+                  style={{ borderColor: 'var(--lp-border)', background: 'var(--lp-surface)', color: 'var(--lp-text)' }}
+                >
+                  Login
+                </Link>
+                <Link
+                  to="/signup"
+                  className="hidden md:inline-flex items-center justify-center rounded-full px-5 py-2.5 text-sm font-extrabold"
+                  style={{
+                    background: 'linear-gradient(135deg, var(--lp-accent-primary), var(--lp-accent-secondary))',
+                    color: 'white',
+                    boxShadow: '0 22px 70px rgb(var(--lp-accent-primary-rgb) / 0.22)',
+                  }}
+                >
+                  Get started free
+                </Link>
+              </>
+            )}
+            <button
+              className="MobileNavToggle md:hidden"
+              onClick={() => setMobileNavOpen((v) => !v)}
+              aria-label={mobileNavOpen ? 'Close menu' : 'Open menu'}
+              style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 8 }}
             >
-              Login
-            </Link>
-            <Link
-              to="/signup"
-              className="inline-flex items-center justify-center rounded-full px-5 py-2.5 text-sm font-extrabold"
-              style={{
-                background: 'linear-gradient(135deg, var(--lp-accent-primary), var(--lp-accent-secondary))',
-                color: 'white',
-                boxShadow: '0 22px 70px rgb(var(--lp-accent-primary-rgb) / 0.22)',
-              }}
-            >
-              Get started free
-            </Link>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                {mobileNavOpen ? (
+                  <><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></>
+                ) : (
+                  <><line x1="3" y1="7" x2="21" y2="7" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="17" x2="21" y2="17" /></>
+                )}
+              </svg>
+            </button>
           </div>
         </Container>
+
+        {/* Mobile nav drawer */}
+        {mobileNavOpen && (
+          <motion.div
+            className="MobileNavDrawer md:hidden"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+            style={{
+              background: 'var(--lp-surface-strong)',
+              borderBottom: '1px solid var(--lp-border)',
+              padding: '16px 24px 24px',
+              boxShadow: '0 18px 40px rgba(15, 23, 42, 0.12)',
+            }}
+          >
+            <nav className="grid gap-1" aria-label="Mobile">
+              {[
+                { href: '#features', label: 'Features' },
+                { href: '#stories', label: 'Stories' },
+                { href: '#pricing', label: 'Pricing' },
+                { href: '#contact', label: 'Contact' },
+              ].map((item) => (
+                <a
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setMobileNavOpen(false)}
+                  className="rounded-[14px] px-4 py-3 text-sm font-bold transition-colors"
+                  style={{ color: 'var(--lp-text)', display: 'block' }}
+                >
+                  {item.label}
+                </a>
+              ))}
+            </nav>
+            {user ? (
+              <div className="mt-4 grid gap-3">
+                <div className="px-4 py-2 text-sm font-bold" style={{ color: 'var(--lp-text-secondary)' }}>
+                  {user.email}
+                </div>
+                <div className="grid gap-3" style={{ gridTemplateColumns: '1fr 1fr' }}>
+                  <Link
+                    to="/app"
+                    onClick={() => setMobileNavOpen(false)}
+                    className="inline-flex h-11 items-center justify-center rounded-[14px] text-sm font-extrabold"
+                    style={{
+                      background: 'linear-gradient(135deg, var(--lp-accent-primary), var(--lp-accent-secondary))',
+                      color: 'white',
+                    }}
+                  >
+                    Go to app
+                  </Link>
+                  <button
+                    onClick={() => { setMobileNavOpen(false); signOut().then(() => navigate('/')); }}
+                    className="inline-flex h-11 items-center justify-center rounded-[14px] border text-sm font-extrabold"
+                    style={{ borderColor: 'var(--lp-border)', background: 'var(--lp-surface)', color: 'var(--lp-text)', cursor: 'pointer' }}
+                  >
+                    Logout
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="mt-4 grid gap-3" style={{ gridTemplateColumns: '1fr 1fr' }}>
+                <Link
+                  to="/login"
+                  onClick={() => setMobileNavOpen(false)}
+                  className="inline-flex h-11 items-center justify-center rounded-[14px] border text-sm font-extrabold"
+                  style={{ borderColor: 'var(--lp-border)', background: 'var(--lp-surface)', color: 'var(--lp-text)' }}
+                >
+                  Login
+                </Link>
+                <Link
+                  to="/signup"
+                  onClick={() => setMobileNavOpen(false)}
+                  className="inline-flex h-11 items-center justify-center rounded-[14px] text-sm font-extrabold"
+                  style={{
+                    background: 'linear-gradient(135deg, var(--lp-accent-primary), var(--lp-accent-secondary))',
+                    color: 'white',
+                  }}
+                >
+                  Get started
+                </Link>
+              </div>
+            )}
+          </motion.div>
+        )}
       </header>
 
       <main>
         <section
           id="top"
           className="relative pt-20 HeroSection"
-          style={{ background: 'linear-gradient(180deg, var(--lp-bg), var(--lp-bg-2))' }}
+          style={{ background: 'linear-gradient(180deg, var(--lp-bg), var(--lp-bg-2))', overflow: 'hidden' }}
           data-reduce-motion={reduceMotion ? 'true' : 'false'}
         >
+          {/* Animated gradient mesh */}
+          <div className="HeroGradientMesh" aria-hidden="true" />
           <Container>
             <div ref={heroRef} className="grid items-center gap-10 pb-16 pt-10 lg:grid-cols-2 lg:pb-24">
               <motion.div variants={heroContainer} initial={reduceMotion ? false : 'hidden'} animate="show">
@@ -1097,19 +1229,42 @@ export default function LandingPageNew() {
 
           <div className="mt-10 grid gap-4 md:grid-cols-3">
             {[
-              { title: 'Starter', price: 'Free', cta: 'Start', highlight: true },
-              { title: 'Plus', price: 'Soon', cta: 'Notify me', highlight: false },
-              { title: 'Teams', price: 'Later', cta: 'Talk to us', highlight: false },
+              {
+                title: 'Starter', price: 'Free', cta: 'Start', highlight: true,
+                desc: 'Everything you need to write and organize.',
+                features: ['Unlimited notes', 'Color themes', 'PDF / MD / TXT export', 'Share links', 'Folders & search'],
+              },
+              {
+                title: 'Plus', price: 'Soon', cta: 'Notify me', highlight: false,
+                desc: 'For power users who want more.',
+                features: ['Everything in Starter', 'Offline mode', 'Priority support', 'Advanced export options', 'Custom themes'],
+              },
+              {
+                title: 'Teams', price: 'Later', cta: 'Talk to us', highlight: false,
+                desc: 'Collaboration for your whole team.',
+                features: ['Everything in Plus', 'Team workspaces', 'Admin controls', 'Shared folders', 'Usage analytics'],
+              },
             ].map((p) => (
               <FadeIn key={p.title}>
                 <div
-                  className="rounded-[22px] border p-6"
+                  className="relative rounded-[22px] border p-6 flex flex-col"
                   style={{
                     borderColor: p.highlight ? 'rgb(var(--lp-accent-primary-rgb) / 0.30)' : 'var(--lp-border)',
                     background: 'var(--lp-surface-strong)',
-                    boxShadow: 'var(--lp-shadow)',
+                    boxShadow: p.highlight ? 'var(--lp-shadow-strong)' : 'var(--lp-shadow)',
                   }}
                 >
+                  {p.highlight && (
+                    <span
+                      className="absolute -top-3 right-5 inline-flex items-center rounded-full px-3 py-1 text-[11px] font-extrabold"
+                      style={{
+                        background: 'linear-gradient(135deg, var(--lp-accent-primary), var(--lp-accent-secondary))',
+                        color: 'white',
+                      }}
+                    >
+                      Popular
+                    </span>
+                  )}
                   <div className="text-xs font-black" style={{ color: 'var(--lp-text-muted)' }}>
                     {p.title}
                   </div>
@@ -1117,12 +1272,23 @@ export default function LandingPageNew() {
                     {p.price}
                   </div>
                   <div className="mt-2 text-sm font-bold" style={{ color: 'var(--lp-text-secondary)' }}>
-                    All core features to write and export.
+                    {p.desc}
                   </div>
-                  <div className="mt-6">
+                  <ul className="mt-5 grid gap-2.5" style={{ listStyle: 'none', padding: 0 }}>
+                    {p.features.map((f) => (
+                      <li key={f} className="flex items-center gap-2.5 text-sm" style={{ color: 'var(--lp-text-secondary)' }}>
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
+                          <circle cx="8" cy="8" r="7" stroke="rgb(var(--lp-accent-primary-rgb) / 0.40)" strokeWidth="1.5" />
+                          <path d="M5.5 8l2 2 3.5-3.5" stroke="var(--lp-accent-primary)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                        <span className="font-semibold">{f}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="mt-6 mt-auto pt-2">
                     <a
                       href={p.title === 'Starter' ? '/signup' : '#contact'}
-                      className="inline-flex h-11 w-full items-center justify-center rounded-[16px] px-5 text-sm font-extrabold"
+                      className="inline-flex h-11 w-full items-center justify-center rounded-[16px] px-5 text-sm font-extrabold transition-transform hover:-translate-y-0.5"
                       style={{
                         background: p.highlight ? 'linear-gradient(135deg, var(--lp-accent-primary), var(--lp-accent-secondary))' : 'var(--lp-surface)',
                         color: p.highlight ? 'white' : 'var(--lp-text)',
@@ -1230,30 +1396,29 @@ export default function LandingPageNew() {
       </main>
 
       <footer className="border-t" style={{ borderTopColor: 'var(--lp-border)' }}>
-        <Container className="grid gap-6 py-10 sm:grid-cols-[1fr_auto_1fr] sm:items-center">
-          <div className="flex items-center justify-start">
+        <Container className="grid gap-8 py-12 sm:grid-cols-[1fr_auto_1fr] sm:items-center">
+          <div>
             <div className="BrandMark is-logo" style={{ width: 160, height: 36 }}>
               <img className="BrandLogo" src="/logo-memora.png" alt="Memora" />
             </div>
+            <div className="mt-2 text-xs font-semibold" style={{ color: 'var(--lp-text-muted)' }}>
+              Your knowledge, beautifully organized.
+            </div>
           </div>
 
-          <div className="text-xs font-bold" style={{ color: 'var(--lp-text-muted)', textAlign: 'center' }}>
-            © {new Date().getFullYear()}
+          <div className="flex items-center gap-4">
+            <a href="https://twitter.com" target="_blank" rel="noreferrer" aria-label="Twitter" style={{ color: 'var(--lp-text-muted)' }} className="transition-colors hover:opacity-80">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg>
+            </a>
+            <a href="https://github.com" target="_blank" rel="noreferrer" aria-label="GitHub" style={{ color: 'var(--lp-text-muted)' }} className="transition-colors hover:opacity-80">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" /></svg>
+            </a>
           </div>
 
-          <div
-            className="flex flex-wrap items-center gap-5 text-sm font-bold sm:justify-self-end"
-            style={{ color: 'var(--lp-text-secondary)' }}
-          >
-            <a href="/privacy" className="transition-colors">
-              Privacy
-            </a>
-            <a href="/terms" className="transition-colors">
-              Terms
-            </a>
-            <a href="https://github.com" className="transition-colors" target="_blank" rel="noreferrer">
-              GitHub
-            </a>
+          <div className="flex flex-wrap items-center gap-5 text-sm font-bold sm:justify-self-end" style={{ color: 'var(--lp-text-secondary)' }}>
+            <a href="/privacy" className="transition-colors hover:opacity-80">Privacy</a>
+            <a href="/terms" className="transition-colors hover:opacity-80">Terms</a>
+            <span className="text-xs font-semibold" style={{ color: 'var(--lp-text-muted)' }}>© {new Date().getFullYear()} Memora</span>
           </div>
         </Container>
       </footer>
