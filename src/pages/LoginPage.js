@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthProvider';
 
 export default function LoginPage() {
-  const { signInWithPassword, signInWithGoogle, user } = useAuth();
+  const { signInWithPassword, user } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -33,17 +33,6 @@ export default function LoginPage() {
     }
   };
 
-  const onGoogle = async () => {
-    setSubmitting(true);
-    setError(null);
-
-    try {
-      await signInWithGoogle();
-    } catch (err) {
-      setError(err?.message || 'Failed to sign in with Google');
-      setSubmitting(false);
-    }
-  };
 
   return (
     <div className="AuthContainer">
@@ -59,13 +48,6 @@ export default function LoginPage() {
           <div className="AuthSubtitle">Sign in to your workspace</div>
         </div>
 
-        <button className="AuthButton AuthButtonSecondary" type="button" onClick={onGoogle} disabled={submitting}>
-          Continue with Google
-        </button>
-
-        <div className="AuthDivider">
-          <span>or</span>
-        </div>
 
         <form onSubmit={onSubmit} className="AuthForm">
           <label className="AuthLabel">
