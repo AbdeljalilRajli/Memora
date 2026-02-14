@@ -2,6 +2,7 @@ import React, { useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, useReducedMotion, useScroll, useTransform } from 'framer-motion';
 import { useAuth } from '../auth/AuthProvider';
+import { supabase } from '../lib/supabaseClient';
 
 function Container({ children, className = '' }) {
   return <div className={`mx-auto w-full max-w-6xl px-6 ${className}`}>{children}</div>;
@@ -129,6 +130,30 @@ export default function LandingPageNew() {
     }),
     []
   );
+
+  const [formState, setFormState] = useState({ email: '', message: '' });
+  const [status, setStatus] = useState('idle'); // idle | loading | success | error
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setStatus('loading');
+
+    try {
+      const { error } = await supabase
+        .from('contact_messages')
+        .insert([
+          { email: formState.email, message: formState.message }
+        ]);
+
+      if (error) throw error;
+
+      setStatus('success');
+      setFormState({ email: '', message: '' });
+    } catch (err) {
+      console.error('Error submitting form:', err);
+      setStatus('error');
+    }
+  };
 
   const heroLine = useMemo(
     () => ({
@@ -1155,11 +1180,15 @@ export default function LandingPageNew() {
                 className="rounded-[22px] border p-6"
                 style={{ borderColor: 'var(--lp-border)', background: 'var(--lp-surface-strong)', boxShadow: 'var(--lp-shadow)' }}
               >
-                <form className="grid gap-3" onSubmit={(e) => e.preventDefault()}>
+                <form className="grid gap-3" onSubmit={handleSubmit}>
                   <label className="grid gap-2 text-sm font-bold" style={{ color: 'var(--lp-text-secondary)' }}>
                     Email
                     <input
+                      required
                       type="email"
+                      name="email"
+                      value={formState.email}
+                      onChange={(e) => setFormState(s => ({ ...s, email: e.target.value }))}
                       placeholder="you@domain.com"
                       className="h-11 rounded-[14px] border px-4"
                       style={{ borderColor: 'var(--lp-border)', background: 'rgb(255 255 255 / 0.70)', color: 'var(--lp-text)' }}
@@ -1168,6 +1197,10 @@ export default function LandingPageNew() {
                   <label className="grid gap-2 text-sm font-bold" style={{ color: 'var(--lp-text-secondary)' }}>
                     What do you need?
                     <textarea
+                      required
+                      name="message"
+                      value={formState.message}
+                      onChange={(e) => setFormState(s => ({ ...s, message: e.target.value }))}
                       rows={4}
                       placeholder="Tell us what you want to build."
                       className="rounded-[14px] border p-4"
@@ -1176,14 +1209,26 @@ export default function LandingPageNew() {
                   </label>
                   <button
                     type="submit"
-                    className="mt-2 inline-flex h-11 items-center justify-center rounded-[16px] px-5 text-sm font-extrabold"
-                    style={{ background: 'rgba(11, 18, 32, 0.92)', color: 'white' }}
+                    disabled={status === 'loading' || status === 'success'}
+                    className="mt-2 inline-flex h-11 items-center justify-center rounded-[16px] px-5 text-sm font-extrabold transition-all"
+                    style={{
+                      background: status === 'success' ? '#10B981' : 'rgba(11, 18, 32, 0.92)',
+                      color: 'white',
+                      opacity: status === 'loading' ? 0.7 : 1
+                    }}
                   >
-                    Send
+                    {status === 'loading' ? 'Sending...' : status === 'success' ? 'Sent!' : 'Send'}
                   </button>
-                  <div className="text-xs font-bold" style={{ color: 'var(--lp-text-muted)' }}>
-                    This is a demo form for now (no backend hook yet).
-                  </div>
+                  {status === 'error' && (
+                    <div className="text-xs font-bold text-red-500 mt-2">
+                      Something went wrong. Please try again.
+                    </div>
+                  )}
+                  {status === 'success' && (
+                    <div className="text-xs font-bold text-green-600 mt-2">
+                      Thanks! We've received your message.
+                    </div>
+                  )}
                 </form>
               </div>
             </div>
