@@ -48,6 +48,8 @@ html {
   font-weight: 500;
   cursor: pointer;
   transition: all 150ms ease;
+  position: relative;
+  z-index: 1;
 }
 
 .LogoutButton:hover {

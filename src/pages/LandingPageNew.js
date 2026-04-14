@@ -279,6 +279,7 @@ export default function LandingPageNew() {
                   {user.email}
                 </span>
                 <button
+                  type="button"
                   onClick={onLogout}
                   disabled={loggingOut}
                   className="LogoutButton"
