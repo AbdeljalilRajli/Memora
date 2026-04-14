@@ -224,7 +224,6 @@ function FAQItem({ question, answer, delay = 0 }) {
 
 
 export default function LandingPageNew() {
-  const reduceMotion = useReducedMotion();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const { user, signOut } = useAuth();
   const [loggingOut, setLoggingOut] = useState(false);
@@ -788,8 +787,8 @@ export default function LandingPageNew() {
             <div className="flex flex-col sm:flex-row items-center justify-between w-full max-w-2xl gap-4 text-xs" style={{ color: 'var(--lp-text-muted)' }}>
               <p>© {new Date().getFullYear()} Memora. All rights reserved.</p>
               <div className="flex items-center gap-6">
-                <a href="#" className="transition-colors hover:text-[var(--lp-text)]">Privacy</a>
-                <a href="#" className="transition-colors hover:text-[var(--lp-text)]">Terms</a>
+                <a href="/privacy" className="transition-colors hover:text-[var(--lp-text)]">Privacy</a>
+                <a href="/terms" className="transition-colors hover:text-[var(--lp-text)]">Terms</a>
               </div>
             </div>
           </div>
