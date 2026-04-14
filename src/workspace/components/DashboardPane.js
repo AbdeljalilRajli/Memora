@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
@@ -515,6 +515,8 @@ export function DashboardPane({ view = 'notes', onOpenEditor }) {
               </div>
 
               <div
+                data-drop-target
+                data-folder-id=""
                 className={
                   folderFilter.type === 'unfiled'
                     ? `FolderCard isActive isYellow${dragOverFolderId === 'unfiled' ? ' isDropTarget' : ''}${dropFlashId === 'unfiled' ? ' isDropFlash' : ''}`
@@ -539,6 +541,8 @@ export function DashboardPane({ view = 'notes', onOpenEditor }) {
               {recentFolders.map((f) => (
                 <div
                   key={f.id}
+                  data-drop-target
+                  data-folder-id={f.id}
                   className={
                     folderFilter.type === 'folder' && folderFilter.id === f.id
                       ? `FolderCard isActive ${folderColorClass(f.color)}${f.pinned ? ' isPinned' : ''}${dragOverFolderId === f.id ? ' isDropTarget' : ''}${dropFlashId === f.id ? ' isDropFlash' : ''}`

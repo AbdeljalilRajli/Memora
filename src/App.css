@@ -35,6 +35,32 @@ html {
   scroll-margin-top: 88px;
 }
 
+.LogoutButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 20px;
+  border-radius: 999px;
+  border: 1px solid rgba(15, 23, 42, 0.20);
+  background: transparent;
+  color: rgba(15, 23, 42, 0.70);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.LogoutButton:hover {
+  border-color: rgba(15, 23, 42, 0.35);
+  background: rgba(15, 23, 42, 0.04);
+  color: rgba(15, 23, 42, 0.90);
+}
+
+.LogoutButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 :root.theme-light {
   --bg-main: #FFE2AF;
   --bg-surface: #FFFFFF;
@@ -879,9 +905,9 @@ a:visited {
 }
 
 .FolderCard:hover {
-  transform: translateY(-2px);
-  border-color: rgba(15, 23, 42, 0.18);
-  box-shadow: 0 22px 54px rgba(15, 23, 42, 0.12);
+  transform: translateY(-3px) scale(1.01);
+  border-color: rgba(15, 23, 42, 0.22);
+  box-shadow: 0 26px 60px rgba(15, 23, 42, 0.14);
 }
 
 .FolderCard.isDropTarget {
@@ -2656,15 +2682,15 @@ a:visited {
 }
 
 .EditorContainer {
-  max-width: none;
-  margin: 0;
-  padding: 24px 22px 120px;
-  border-radius: 0;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 28px 32px 120px;
+  border-radius: 16px;
   position: relative;
-  overflow: hidden;
+  overflow: visible;
   background: #ffffff;
-  border: none;
-  box-shadow: none;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  box-shadow: 0 4px 24px rgba(15, 23, 42, 0.06);
   backdrop-filter: none;
   --text: rgba(15, 23, 42, 0.92);
   --muted: rgba(15, 23, 42, 0.62);
@@ -3218,4 +3244,122 @@ textarea:focus-visible,
 .AuthLogo img {
   height: 40px;
   width: auto;
+}
+
+/* ── Static Editor Toolbar ── */
+.EditorStaticToolbar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 12px;
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.10);
+  border-radius: 12px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+}
+
+.EditorToolbarDivider {
+  width: 1px;
+  height: 20px;
+  background: rgba(15, 23, 42, 0.12);
+  margin: 0 4px;
+}
+
+.EditorToolbarButton {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: rgba(15, 23, 42, 0.60);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 150ms ease;
+}
+
+.EditorToolbarButton:hover {
+  background: rgba(15, 23, 42, 0.06);
+  color: rgba(15, 23, 42, 0.80);
+}
+
+.EditorToolbarButton.isActive {
+  background: rgba(249, 110, 91, 0.12);
+  color: var(--primary);
+}
+
+.EditorToolbarButton:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ── Heading Dropdown ── */
+.EditorHeadingDropdown {
+  position: relative;
+}
+
+.EditorHeadingDropdown .EditorToolbarButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  min-width: 44px;
+}
+
+.EditorHeadingDropdownMenu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  min-width: 180px;
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+  z-index: 100;
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.EditorHeadingDropdownItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: rgba(15, 23, 42, 0.80);
+  font-size: 14px;
+  text-align: left;
+  width: 100%;
+  transition: all 120ms ease;
+}
+
+.EditorHeadingDropdownItem:hover {
+  background: rgba(15, 23, 42, 0.06);
+}
+
+.EditorHeadingDropdownItem.isActive {
+  background: rgba(249, 110, 91, 0.12);
+  color: var(--primary);
+}
+
+.EditorHeadingLabel {
+  flex: 1;
+}
+
+.EditorHeadingShortcut {
+  font-size: 11px;
+  color: rgba(15, 23, 42, 0.45);
+  font-weight: 500;
+}
+
+.EditorHeadingDropdownItem.isActive .EditorHeadingShortcut {
+  color: var(--primary);
+  opacity: 0.7;
 }

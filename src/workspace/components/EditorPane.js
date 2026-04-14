@@ -6,7 +6,6 @@ import FormControl from '@mui/material/FormControl';
 import MenuItem from '@mui/material/MenuItem';
 import Select from '@mui/material/Select';
 import Stack from '@mui/material/Stack';
-import TextField from '@mui/material/TextField';
 import { useNotes } from '../../notes/NotesProvider';
 import { NoteEditor } from '../../editor/NoteEditor';
 import { useToast } from '../../ui/ToastProvider';
@@ -146,9 +145,11 @@ export function EditorPane() {
       }}
     >
       <div className="EditorContainer">
+        {/* Header with back/close and action buttons */}
         <Box className="EditorHeader" onMouseDown={(e) => e.stopPropagation()} sx={{ mb: 2 }}>
           <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={2}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, minWidth: 0 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              {/* Color picker button */}
               <Button
                 ref={colorButtonRef}
                 variant="outlined"
@@ -184,11 +185,12 @@ export function EditorPane() {
                 }}
               >
                 <span className={color?.id === 'custom' ? 'ColorChip is-custom' : `ColorChip is-${color?.id}`} aria-hidden="true" style={{ marginRight: 10 }} />
-                <span style={{ marginRight: 10 }}>Color note</span>
+                <span style={{ marginRight: 10 }}>Color</span>
                 <span style={{ opacity: 0.72, fontWeight: 700 }}>{color?.id === 'custom' ? 'Custom' : color?.label || 'Cream'}</span>
               </Button>
 
-              <FormControl size="small" sx={{ minWidth: 180 }}>
+              {/* Folder dropdown */}
+              <FormControl size="small" sx={{ minWidth: 160 }}>
                 <Select
                   value={note.folderId || ''}
                   displayEmpty
@@ -312,30 +314,32 @@ export function EditorPane() {
             )
           : null}
 
-        <Box sx={{ mb: 1.5 }}>
-          <TextField
-            inputRef={titleRef}
+        {/* Clean title input */}
+        <Box sx={{ mb: 2 }}>
+          <input
+            ref={titleRef}
+            type="text"
             value={titleDraft}
-            placeholder="Title (required)"
+            placeholder="Task title..."
             onChange={onTitleChange}
-            fullWidth
-            variant="outlined"
-            InputProps={{
-              sx: {
-                borderRadius: 3,
-                fontSize: '1.25rem',
-                fontWeight: 850,
-                lineHeight: 1.3,
-                letterSpacing: '-0.03em',
-                backgroundColor: 'rgba(255,255,255,0.98)',
-                '& .MuiInputBase-input': { padding: '14px 14px' },
-                '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(30,30,30,0.14)' },
-                '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(30,30,30,0.20)' },
-                '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,183,0,0.85)', borderWidth: 2 },
-              },
+            style={{
+              width: '100%',
+              border: 'none',
+              outline: 'none',
+              background: 'transparent',
+              fontSize: '1.5rem',
+              fontWeight: 700,
+              color: 'var(--text-primary)',
+              padding: '8px 0',
             }}
-            aria-label="Note title"
           />
+        </Box>
+
+        {/* Description label */}
+        <Box sx={{ mb: 1 }}>
+          <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
+            Description
+          </span>
         </Box>
 
         <div className="TitleContentDivider" aria-hidden="true" />
@@ -343,4 +347,4 @@ export function EditorPane() {
       </div>
     </section>
   );
- }
+}

@@ -1,1301 +1,797 @@
-import React, { useMemo, useRef, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { motion, useReducedMotion, useScroll, useTransform } from 'framer-motion';
+import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { motion, useReducedMotion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../auth/AuthProvider';
-import { supabase } from '../lib/supabaseClient';
 
+// --- Icons ---
+const icons = {
+  menu: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="18" x2="21" y2="18" /></svg>,
+  close: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>,
+  arrowRight: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>,
+  check: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>,
+  write: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M12 20h9" /><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" /></svg>,
+  search: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></svg>,
+  colors: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10" /><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" /><path d="M2 12h20" /></svg>,
+  share: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><line x1="8.59" y1="13.51" x2="15.42" y2="17.49" /><line x1="15.41" y1="6.51" x2="8.59" y2="10.49" /></svg>,
+  export: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>,
+  lock: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>,
+};
+
+// --- Components ---
 function Container({ children, className = '' }) {
-  return <div className={`mx-auto w-full max-w-6xl px-6 ${className}`}>{children}</div>;
+  return <div className={`mx-auto w-full max-w-7xl px-6 lg:px-8 ${className}`}>{children}</div>;
 }
 
-function Section({ id, children, className = '' }) {
-  return (
-    <section id={id} className={className}>
-      <Container>{children}</Container>
-    </section>
-  );
-}
-
-function FadeIn({ children, className = '', delay = 0 }) {
+function FadeIn({ children, className = '', delay = 0, direction = 'up' }) {
   const reduceMotion = useReducedMotion();
-
+  const directionOffset = {
+    up: { y: 30, x: 0 },
+    down: { y: -30, x: 0 },
+    left: { y: 0, x: 30 },
+    right: { y: 0, x: -30 },
+  };
+  
   return (
     <motion.div
       className={className}
-      initial={reduceMotion ? false : { opacity: 0, y: 14 }}
-      whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.22 }}
-      transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1], delay }}
+      initial={reduceMotion ? false : { opacity: 0, ...directionOffset[direction] }}
+      whileInView={reduceMotion ? undefined : { opacity: 1, y: 0, x: 0 }}
+      viewport={{ once: true, amount: 0.2 }}
+      transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1], delay }}
     >
       {children}
     </motion.div>
   );
 }
 
-function FeatureIcon({ children }) {
+function Badge({ children, className = '' }) {
   return (
-    <span
-      className="inline-flex h-9 w-9 items-center justify-center rounded-[14px] border"
-      style={{
-        borderColor: 'var(--lp-border)',
-        background: 'rgb(var(--lp-accent-primary-rgb) / 0.10)',
-        color: 'var(--lp-accent-primary)',
-      }}
-      aria-hidden="true"
+    <span 
+      className={`inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-xs font-semibold ${className}`}
+      style={{ borderColor: 'var(--lp-border)', background: 'var(--lp-surface)', color: 'var(--lp-text-muted)' }}
     >
+      <span className="h-1.5 w-1.5 rounded-full" style={{ background: 'var(--lp-accent-primary)' }} />
       {children}
     </span>
   );
 }
 
-function BentoCard({ children, className = '', style }) {
-  const reduceMotion = useReducedMotion();
+function Button({ children, variant = 'primary', href, onClick, className = '' }) {
+  const baseStyles = 'inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold';
+  
+  const variants = {
+    primary: {
+      background: 'linear-gradient(135deg, var(--lp-accent-primary), var(--lp-accent-secondary))',
+      color: 'white',
+      boxShadow: '0 8px 32px rgba(249, 110, 91, 0.25)',
+    },
+    secondary: {
+      background: 'var(--lp-surface)',
+      color: 'var(--lp-text)',
+      border: '1px solid var(--lp-border)',
+    },
+    ghost: {
+      background: 'transparent',
+      color: 'var(--lp-text-secondary)',
+    },
+  };
 
+  const Component = href ? Link : 'button';
+  
   return (
-    <motion.div
-      whileHover={reduceMotion ? undefined : { y: -2 }}
-      transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
-      className={`relative overflow-hidden rounded-[28px] border ${className}`}
-      style={{
-        borderColor: 'var(--lp-border)',
-        background: 'var(--lp-surface-strong)',
-        boxShadow: 'var(--lp-shadow)',
-        ...style,
-      }}
-    >
-      {children}
+    <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.98 }} transition={{ type: 'spring', stiffness: 400, damping: 17 }}>
+      <Component 
+        to={href} 
+        onClick={onClick}
+        className={`${baseStyles} ${className} transition-all duration-200`}
+        style={variants[variant]}
+      >
+        {children}
+      </Component>
     </motion.div>
   );
 }
 
-
-
-function ScreenshotFrame({ title, src, alt }) {
+function FeatureCard({ icon, title, description, delay = 0 }) {
   return (
-    <div
-      className="overflow-hidden rounded-[22px] border"
-      style={{
-        borderColor: 'var(--lp-border)',
-        background: 'var(--lp-surface-strong)',
-        boxShadow: 'var(--lp-shadow)',
-      }}
-    >
-      <div
-        className="flex h-11 items-center justify-between px-4"
-        style={{
-          background:
-            'linear-gradient(90deg, rgb(var(--lp-accent-primary-rgb) / 0.18), rgb(var(--lp-accent-secondary-rgb) / 0.12))',
-          borderBottom: '1px solid var(--lp-border)',
+    <FadeIn delay={delay}>
+      <motion.div 
+        className="group rounded-3xl border p-8 transition-all duration-300"
+        style={{ 
+          borderColor: 'var(--lp-border)', 
+          background: 'var(--lp-surface)',
         }}
+        whileHover={{ 
+          y: -8, 
+          boxShadow: '0 20px 40px rgba(249, 110, 91, 0.15)',
+          borderColor: 'rgba(249, 110, 91, 0.3)'
+        }}
+        transition={{ type: 'spring', stiffness: 300, damping: 20 }}
       >
-        <div className="flex items-center gap-2">
-          <span className="h-2.5 w-2.5 rounded-full" style={{ background: 'rgb(var(--lp-accent-primary-rgb) / 0.80)' }} />
-          <span className="h-2.5 w-2.5 rounded-full" style={{ background: 'rgb(var(--lp-accent-secondary-rgb) / 0.78)' }} />
-          <span className="h-2.5 w-2.5 rounded-full" style={{ background: 'rgb(var(--lp-accent-tertiary-rgb) / 0.76)' }} />
-        </div>
-        <div className="text-xs font-extrabold tracking-tight" style={{ color: 'var(--lp-text)' }}>
-          {title}
-        </div>
-      </div>
-      <div className="p-4 sm:p-5">
-        <div className="overflow-hidden rounded-[18px] border" style={{ borderColor: 'var(--lp-border)', background: 'rgb(255 255 255 / 0.02)' }}>
-          <img src={src} alt={alt} className="block h-auto w-full" loading="lazy" />
-        </div>
-      </div>
-    </div>
+        <motion.div 
+          className="mb-5 inline-flex h-12 w-12 items-center justify-center rounded-2xl"
+          style={{ background: 'rgb(var(--lp-accent-primary-rgb) / 0.1)', color: 'var(--lp-accent-primary)' }}
+          whileHover={{ scale: 1.15, rotate: 5 }}
+          transition={{ type: 'spring', stiffness: 400 }}
+        >
+          {icon}
+        </motion.div>
+        <h3 className="mb-2 text-lg font-bold" style={{ color: 'var(--lp-text)' }}>{title}</h3>
+        <p className="text-sm leading-relaxed" style={{ color: 'var(--lp-text-secondary)' }}>{description}</p>
+      </motion.div>
+    </FadeIn>
   );
 }
 
+function TestimonialCard({ quote, author, role, delay = 0 }) {
+  return (
+    <FadeIn delay={delay}>
+      <motion.div 
+        className="relative p-6"
+        whileHover={{ y: -5 }}
+        transition={{ type: 'spring', stiffness: 300 }}
+      >
+        {/* Large quote mark */}
+        <div 
+          className="absolute top-2 left-2 text-6xl font-serif leading-none"
+          style={{ color: 'rgb(var(--lp-accent-primary-rgb) / 0.2)' }}
+        >
+          "
+        </div>
+        
+        <div className="relative">
+          <p className="text-lg font-medium leading-relaxed mb-6" style={{ color: 'var(--lp-text)' }}>
+            {quote}
+          </p>
+          
+          <div className="flex items-center gap-3">
+            <div 
+              className="flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold"
+              style={{ background: 'linear-gradient(135deg, var(--lp-accent-primary), var(--lp-accent-secondary))', color: 'white' }}
+            >
+              {author.split(' ').map(n => n[0]).join('')}
+            </div>
+            <div>
+              <div className="text-sm font-semibold" style={{ color: 'var(--lp-text)' }}>{author}</div>
+              <div className="text-xs" style={{ color: 'var(--lp-text-muted)' }}>{role}</div>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+    </FadeIn>
+  );
+}
+
+function FAQItem({ question, answer, delay = 0 }) {
+  const [isOpen, setIsOpen] = useState(false);
+  
+  return (
+    <FadeIn delay={delay}>
+      <div 
+        className="rounded-xl overflow-hidden transition-all duration-200"
+        style={{ 
+          background: 'white',
+          boxShadow: isOpen ? '0 4px 20px rgba(0,0,0,0.12)' : '0 2px 8px rgba(0,0,0,0.06)',
+        }}
+      >
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          className="w-full flex items-center justify-between p-5 text-left hover:bg-gray-50/80 transition-colors border-0 outline-none"
+          style={{ border: 'none', outline: 'none' }}
+        >
+          <span className="font-semibold pr-4" style={{ color: 'var(--lp-text)' }}>{question}</span>
+          <motion.div
+            animate={{ rotate: isOpen ? 45 : 0 }}
+            transition={{ duration: 0.2 }}
+            className="flex-shrink-0"
+            style={{ 
+              width: '28px', 
+              height: '28px', 
+              borderRadius: '50%',
+              background: isOpen ? 'var(--lp-accent-primary)' : 'rgb(var(--lp-accent-primary-rgb) / 0.1)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={isOpen ? 'white' : 'var(--lp-accent-primary)'} strokeWidth="2.5">
+              <line x1="12" y1="5" x2="12" y2="19" />
+              <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+          </motion.div>
+        </button>
+        <AnimatePresence initial={false}>
+          {isOpen && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <div 
+                className="px-5 pb-5 text-sm leading-relaxed"
+                style={{ color: 'var(--lp-text-secondary)' }}
+              >
+                {answer}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </FadeIn>
+  );
+}
 
 
 export default function LandingPageNew() {
   const reduceMotion = useReducedMotion();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const { user, signOut } = useAuth();
-  const navigate = useNavigate();
-  const heroRef = useRef(null);
-  const { scrollYProgress } = useScroll({ target: heroRef, offset: ['start start', 'end start'] });
-  const mockupY = useTransform(scrollYProgress, [0, 1], [0, -28]);
-  const mockupRotate = useTransform(scrollYProgress, [0, 1], [0.6, 0]);
+  const [loggingOut, setLoggingOut] = useState(false);
 
-  const heroContainer = useMemo(
-    () => ({
-      hidden: {},
-      show: {
-        transition: {
-          staggerChildren: 0.055,
-          delayChildren: 0.08,
-        },
-      },
-    }),
-    []
-  );
-
-  const [formState, setFormState] = useState({ email: '', message: '' });
-  const [status, setStatus] = useState('idle'); // idle | loading | success | error
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setStatus('loading');
-
+  const onLogout = async () => {
+    setLoggingOut(true);
     try {
-      const { error } = await supabase
-        .from('contact_messages')
-        .insert([
-          { email: formState.email, message: formState.message }
-        ]);
-
-      if (error) throw error;
-
-      setStatus('success');
-      setFormState({ email: '', message: '' });
-    } catch (err) {
-      console.error('Error submitting form:', err);
-      setStatus('error');
+      await signOut();
+    } finally {
+      setLoggingOut(false);
     }
   };
 
-  const heroLine = useMemo(
-    () => ({
-      hidden: { opacity: 0, y: 14 },
-      show: { opacity: 1, y: 0, transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] } },
-    }),
-    []
-  );
+  const navLinks = [
+    { href: '#features', label: 'Features' },
+    { href: '#faq', label: 'FAQ' },
+    { href: '#testimonials', label: 'Reviews' },
+  ];
 
   return (
     <div className="LandingPageNew min-h-screen" style={{ background: 'var(--lp-bg-2)', color: 'var(--lp-text)' }}>
-      <header
-        className="sticky top-0 z-50 border-b"
-        style={{
-          borderBottomColor: 'var(--lp-border)',
-          background: 'var(--lp-surface)',
-          backdropFilter: 'blur(14px)',
+      {/* --- Navigation --- */}
+      <header 
+        className="fixed top-0 left-0 right-0 z-50 border-b"
+        style={{ 
+          borderColor: 'var(--lp-border)', 
+          background: 'rgba(246, 247, 251, 0.85)', 
+          backdropFilter: 'blur(20px)',
         }}
       >
         <Container className="flex h-16 items-center justify-between">
-          <Link to="/" className="flex items-center gap-3 text-sm font-black tracking-tight" aria-label="Memora">
-            <div className="BrandMark is-logo" style={{ width: 175, height: 40 }}>
-              <img className="BrandLogo" src="/logo-memora.png" alt="Memora" />
-            </div>
+          <Link to="/" className="flex items-center gap-3" aria-label="Memora">
+            <img src="/logo-memora.png" alt="Memora" className="h-9 w-auto" />
           </Link>
 
-          <nav className="hidden items-center gap-8 text-sm font-semibold md:flex" aria-label="Primary">
-            <a href="#features" className="transition-colors" style={{ color: 'var(--lp-text-secondary)' }}>
-              Features
-            </a>
-            <a href="#stories" className="transition-colors" style={{ color: 'var(--lp-text-secondary)' }}>
-              Stories
-            </a>
-            <a href="#pricing" className="transition-colors" style={{ color: 'var(--lp-text-secondary)' }}>
-              Pricing
-            </a>
-            <a href="#contact" className="transition-colors" style={{ color: 'var(--lp-text-secondary)' }}>
-              Contact
-            </a>
+          <nav className="hidden items-center gap-8 text-sm font-medium md:flex">
+            {navLinks.map(link => (
+              <a 
+                key={link.href} 
+                href={link.href} 
+                className="transition-colors hover:text-[var(--lp-accent-primary)]"
+                style={{ color: 'var(--lp-text-secondary)' }}
+              >
+                {link.label}
+              </a>
+            ))}
           </nav>
 
           <div className="flex items-center gap-3">
             {user ? (
-              <>
-                <span className="hidden md:inline-flex text-sm font-bold" style={{ color: 'var(--lp-text-secondary)' }}>
+              <div className="hidden md:flex items-center gap-3">
+                <span className="text-sm font-medium" style={{ color: 'var(--lp-text-secondary)' }}>
                   {user.email}
                 </span>
-                <Link
-                  to="/app"
-                  className="hidden md:inline-flex items-center justify-center rounded-full px-5 py-2.5 text-sm font-extrabold"
-                  style={{
-                    background: 'linear-gradient(135deg, var(--lp-accent-primary), var(--lp-accent-secondary))',
-                    color: 'white',
-                    boxShadow: '0 22px 70px rgb(var(--lp-accent-primary-rgb) / 0.22)',
-                  }}
-                >
-                  Go to app
-                </Link>
                 <button
-                  onClick={() => signOut().then(() => navigate('/'))}
-                  className="hidden md:inline-flex rounded-full border px-4 py-2 text-sm font-extrabold"
-                  style={{ borderColor: 'var(--lp-border)', background: 'var(--lp-surface)', color: 'var(--lp-text)', cursor: 'pointer' }}
+                  onClick={onLogout}
+                  disabled={loggingOut}
+                  className="LogoutButton"
                 >
-                  Logout
+                  {loggingOut ? 'Logging out...' : 'Logout'}
                 </button>
-              </>
+                <Link to="/app" className="inline-flex">
+                  <Button variant="primary">Go to App</Button>
+                </Link>
+              </div>
             ) : (
               <>
-                <Link
-                  to="/login"
-                  className="hidden rounded-full border px-4 py-2 text-sm font-extrabold md:inline-flex"
-                  style={{ borderColor: 'var(--lp-border)', background: 'var(--lp-surface)', color: 'var(--lp-text)' }}
-                >
-                  Login
+                <Link to="/login" className="hidden text-sm font-medium md:inline-block" style={{ color: 'var(--lp-text-secondary)' }}>
+                  Log in
                 </Link>
-                <Link
-                  to="/signup"
-                  className="hidden md:inline-flex items-center justify-center rounded-full px-5 py-2.5 text-sm font-extrabold"
-                  style={{
-                    background: 'linear-gradient(135deg, var(--lp-accent-primary), var(--lp-accent-secondary))',
-                    color: 'white',
-                    boxShadow: '0 22px 70px rgb(var(--lp-accent-primary-rgb) / 0.22)',
-                  }}
-                >
-                  Get started free
+                <Link to="/signup" className="hidden md:inline-flex">
+                  <Button variant="primary">Get Started</Button>
                 </Link>
               </>
             )}
             <button
-              className="MobileNavToggle md:hidden"
-              onClick={() => setMobileNavOpen((v) => !v)}
-              aria-label={mobileNavOpen ? 'Close menu' : 'Open menu'}
-              style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 8 }}
+              className="md:hidden p-2"
+              onClick={() => setMobileNavOpen(v => !v)}
+              style={{ color: 'var(--lp-text)' }}
             >
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                {mobileNavOpen ? (
-                  <><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></>
-                ) : (
-                  <><line x1="3" y1="7" x2="21" y2="7" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="17" x2="21" y2="17" /></>
-                )}
-              </svg>
+              {mobileNavOpen ? icons.close : icons.menu}
             </button>
           </div>
         </Container>
 
-        {/* Mobile nav drawer */}
+        {/* Mobile Nav */}
         {mobileNavOpen && (
-          <motion.div
-            className="MobileNavDrawer md:hidden"
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
-            style={{
-              background: 'var(--lp-surface-strong)',
-              borderBottom: '1px solid var(--lp-border)',
-              padding: '16px 24px 24px',
-              boxShadow: '0 18px 40px rgba(15, 23, 42, 0.12)',
-            }}
+          <motion.div 
+            className="border-t md:hidden"
+            style={{ borderColor: 'var(--lp-border)', background: 'var(--lp-surface)' }}
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
           >
-            <nav className="grid gap-1" aria-label="Mobile">
-              {[
-                { href: '#features', label: 'Features' },
-                { href: '#stories', label: 'Stories' },
-                { href: '#pricing', label: 'Pricing' },
-                { href: '#contact', label: 'Contact' },
-              ].map((item) => (
-                <a
-                  key={item.href}
-                  href={item.href}
-                  onClick={() => setMobileNavOpen(false)}
-                  className="rounded-[14px] px-4 py-3 text-sm font-bold transition-colors"
-                  style={{ color: 'var(--lp-text)', display: 'block' }}
-                >
-                  {item.label}
-                </a>
-              ))}
-            </nav>
-            {user ? (
-              <div className="mt-4 grid gap-3">
-                <div className="px-4 py-2 text-sm font-bold" style={{ color: 'var(--lp-text-secondary)' }}>
-                  {user.email}
-                </div>
-                <div className="grid gap-3" style={{ gridTemplateColumns: '1fr 1fr' }}>
-                  <Link
-                    to="/app"
+            <Container className="py-6">
+              <nav className="flex flex-col gap-4">
+                {navLinks.map(link => (
+                  <a 
+                    key={link.href} 
+                    href={link.href}
                     onClick={() => setMobileNavOpen(false)}
-                    className="inline-flex h-11 items-center justify-center rounded-[14px] text-sm font-extrabold"
-                    style={{
-                      background: 'linear-gradient(135deg, var(--lp-accent-primary), var(--lp-accent-secondary))',
-                      color: 'white',
-                    }}
+                    className="text-lg font-medium"
+                    style={{ color: 'var(--lp-text)' }}
                   >
-                    Go to app
+                    {link.label}
+                  </a>
+                ))}
+                <hr style={{ borderColor: 'var(--lp-border)' }} />
+                {user ? (
+                  <Link to="/app" onClick={() => setMobileNavOpen(false)}>
+                    <Button variant="primary" className="w-full">Go to App</Button>
                   </Link>
-                  <button
-                    onClick={() => { setMobileNavOpen(false); signOut().then(() => navigate('/')); }}
-                    className="inline-flex h-11 items-center justify-center rounded-[14px] border text-sm font-extrabold"
-                    style={{ borderColor: 'var(--lp-border)', background: 'var(--lp-surface)', color: 'var(--lp-text)', cursor: 'pointer' }}
-                  >
-                    Logout
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div className="mt-4 grid gap-3" style={{ gridTemplateColumns: '1fr 1fr' }}>
-                <Link
-                  to="/login"
-                  onClick={() => setMobileNavOpen(false)}
-                  className="inline-flex h-11 items-center justify-center rounded-[14px] border text-sm font-extrabold"
-                  style={{ borderColor: 'var(--lp-border)', background: 'var(--lp-surface)', color: 'var(--lp-text)' }}
-                >
-                  Login
-                </Link>
-                <Link
-                  to="/signup"
-                  onClick={() => setMobileNavOpen(false)}
-                  className="inline-flex h-11 items-center justify-center rounded-[14px] text-sm font-extrabold"
-                  style={{
-                    background: 'linear-gradient(135deg, var(--lp-accent-primary), var(--lp-accent-secondary))',
-                    color: 'white',
-                  }}
-                >
-                  Get started
-                </Link>
-              </div>
-            )}
+                ) : (
+                  <div className="flex flex-col gap-3">
+                    <Link to="/login" onClick={() => setMobileNavOpen(false)}>
+                      <Button variant="secondary" className="w-full">Log in</Button>
+                    </Link>
+                    <Link to="/signup" onClick={() => setMobileNavOpen(false)}>
+                      <Button variant="primary" className="w-full">Get Started</Button>
+                    </Link>
+                  </div>
+                )}
+              </nav>
+            </Container>
           </motion.div>
         )}
       </header>
 
-      <main>
-        <section
-          id="top"
-          className="relative pt-20 HeroSection"
-          style={{ background: 'linear-gradient(180deg, var(--lp-bg), var(--lp-bg-2))', overflow: 'hidden' }}
-          data-reduce-motion={reduceMotion ? 'true' : 'false'}
-        >
-          {/* Animated gradient mesh */}
-          <div className="HeroGradientMesh" aria-hidden="true" />
-          <Container>
-            <div ref={heroRef} className="grid items-center gap-10 pb-16 pt-10 lg:grid-cols-2 lg:pb-24">
-              <motion.div variants={heroContainer} initial={reduceMotion ? false : 'hidden'} animate="show">
-                <motion.div
-                  variants={heroLine}
-                  className="inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-[11px] font-extrabold uppercase tracking-[0.24em]"
-                  style={{ borderColor: 'var(--lp-border)', background: 'var(--lp-surface)', color: 'var(--lp-text-muted)' }}
-                >
-                  <span
-                    className="h-1.5 w-1.5 rounded-full"
-                    style={{ background: 'linear-gradient(135deg, var(--lp-accent-primary), var(--lp-accent-secondary))' }}
-                  />
-                  Calm, writing-first notes
-                </motion.div>
-
-                <motion.h1
-                  variants={heroLine}
-                  className="mt-6 text-4xl font-black tracking-tight sm:text-5xl lg:text-6xl"
-                  style={{ letterSpacing: '-0.04em' }}
-                >
-                  Notes that feel
+      <main className="pt-16">
+        {/* --- Hero Section --- */}
+        <section className="relative overflow-hidden pt-20 pb-24 lg:pt-32 lg:pb-40">
+          {/* Subtle gradient background */}
+          <div 
+            className="pointer-events-none absolute inset-0"
+            style={{
+              background: 'radial-gradient(ellipse 80% 50% at 50% -20%, rgb(var(--lp-accent-primary-rgb) / 0.12), transparent)',
+            }}
+          />
+          
+          <Container className="relative">
+            <div className="mx-auto max-w-4xl text-center">
+              <FadeIn delay={0.1}>
+                <h1 className="mt-8 text-5xl font-bold tracking-tight sm:text-6xl lg:text-7xl" style={{ letterSpacing: '-0.03em' }}>
+                  Notes that think
                   <br />
-                  <span
-                    style={{
-                      background: 'linear-gradient(135deg, var(--lp-accent-primary), var(--lp-accent-secondary))',
-                      WebkitBackgroundClip: 'text',
-                      backgroundClip: 'text',
-                      color: 'transparent',
-                    }}
-                  >
-                    like a real product
-                  </span>{' '}
-                  .
-                </motion.h1>
-
-                <motion.p
-                  variants={heroLine}
-                  className="mt-5 max-w-xl text-base leading-relaxed sm:text-lg"
-                  style={{ color: 'var(--lp-text-secondary)' }}
-                >
-                  A focused editor with gentle organization: color-coded notes, fast search, and share links when you need them.
-                </motion.p>
-
-                <motion.div variants={heroLine} className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center">
-                  <Link
-                    to="/signup"
-                    className="inline-flex h-12 items-center justify-center rounded-[16px] px-6 text-sm font-extrabold"
-                    style={{
-                      background: 'linear-gradient(135deg, var(--lp-accent-primary), var(--lp-accent-secondary))',
-                      color: 'white',
-                      boxShadow: '0 24px 80px rgb(var(--lp-accent-primary-rgb) / 0.22)',
-                    }}
-                  >
-                    Get started free
+                  <span style={{ 
+                    background: 'linear-gradient(135deg, var(--lp-accent-primary), var(--lp-accent-secondary))',
+                    WebkitBackgroundClip: 'text',
+                    backgroundClip: 'text',
+                    color: 'transparent',
+                  }}>
+                    with you
+                  </span>
+                </h1>
+              </FadeIn>
+              
+              <FadeIn delay={0.2}>
+                <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed" style={{ color: 'var(--lp-text-secondary)' }}>
+                  Memora is the quiet space for your ideas. Write freely, organize effortlessly, 
+                  and find exactly what you need—when you need it.
+                </p>
+              </FadeIn>
+              
+              <FadeIn delay={0.3}>
+                <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
+                  <Link to="/signup">
+                    <Button variant="primary" className="h-14 px-8 text-base">
+                      Start writing free
+                      {icons.arrowRight}
+                    </Button>
                   </Link>
-                  <Link
-                    to="/app"
-                    className="inline-flex h-12 items-center justify-center rounded-[16px] border px-6 text-sm font-extrabold"
-                    style={{ borderColor: 'var(--lp-border)', background: 'var(--lp-surface)', color: 'var(--lp-text)' }}
-                  >
-                    Open app
-                  </Link>
-                  <a
-                    href="#features"
-                    className="inline-flex h-12 items-center justify-center rounded-[16px] border px-6 text-sm font-extrabold"
-                    style={{ borderColor: 'var(--lp-border)', background: 'transparent', color: 'var(--lp-text)' }}
-                  >
-                    See features
+                  <a href="#features">
+                    <Button variant="ghost" className="h-14 px-8 text-base">
+                      See how it works
+                    </Button>
                   </a>
-                </motion.div>
-
-                <motion.div variants={heroLine} className="mt-8 flex items-center gap-4">
-                  <div className="flex -space-x-2">
-                    {['AM', 'JR', 'SK', 'TD', 'LN'].map((initials) => (
-                      <span
-                        key={initials}
-                        className="grid h-9 w-9 place-items-center rounded-full border text-[11px] font-black"
-                        style={{ borderColor: 'var(--lp-border)', background: 'var(--lp-surface)', color: 'var(--lp-text-secondary)' }}
+                </div>
+              </FadeIn>
+              
+              {/* Social Proof */}
+              <FadeIn delay={0.4}>
+                <div className="mt-12 flex items-center justify-center gap-4">
+                  <div className="flex -space-x-3">
+                    {['JD', 'SM', 'AK', 'MR'].map((initials, i) => (
+                      <div 
+                        key={i}
+                        className="flex h-10 w-10 items-center justify-center rounded-full border-2 text-xs font-bold"
+                        style={{ 
+                          borderColor: 'var(--lp-bg-2)', 
+                          background: `hsl(${25 + i * 15}, 85%, 55%)`,
+                          color: 'white',
+                        }}
                       >
                         {initials}
-                      </span>
+                      </div>
                     ))}
                   </div>
-                  <div className="text-sm font-bold" style={{ color: 'var(--lp-text-secondary)' }}>
-                    Loved by creators, developers, and thinkers
-                  </div>
-                </motion.div>
-              </motion.div>
-
-              <motion.div style={{ y: reduceMotion ? 0 : mockupY, rotate: reduceMotion ? 0 : mockupRotate }} className="relative">
-                <div
-                  className="pointer-events-none absolute -inset-10 rounded-[40px]"
-                  aria-hidden="true"
-                  style={{
-                    background:
-                      'radial-gradient(closest-side at 32% 40%, rgb(var(--lp-accent-primary-rgb) / 0.36), transparent 72%), radial-gradient(closest-side at 72% 55%, rgb(var(--lp-accent-secondary-rgb) / 0.22), transparent 74%), radial-gradient(closest-side at 52% 85%, rgb(var(--lp-accent-tertiary-rgb) / 0.18), transparent 74%)',
-                    filter: 'blur(18px)',
-                    opacity: 0.9,
-                  }}
-                />
-
-                <motion.div
-                  className="relative"
-                  animate={reduceMotion ? undefined : { y: [0, -10, 0] }}
-                  transition={reduceMotion ? undefined : { duration: 7.5, ease: 'easeInOut', repeat: Infinity }}
-                >
-                  <ScreenshotFrame title="Dashboard" src="/memora-dashboard.png" alt="Memora dashboard" />
-                </motion.div>
-
-                <div
-                  className="pointer-events-none absolute -bottom-8 -right-8 hidden rounded-[28px] border p-4 lg:block"
-                  aria-hidden="true"
-                  style={{
-                    borderColor: 'var(--lp-border)',
-                    background: 'var(--lp-surface)',
-                    backdropFilter: 'blur(12px)',
-                    boxShadow: 'var(--lp-shadow)',
-                  }}
-                >
-                  <div className="text-xs font-black" style={{ color: 'var(--lp-text)' }}>
-                    Search
-                  </div>
-                  <div className="mt-2 h-2.5 w-40 rounded-full" style={{ background: 'rgba(148, 163, 184, 0.22)' }} />
-                  <div className="mt-3 flex items-center gap-2">
-                    <span
-                      className="h-6 rounded-full border px-3 text-[11px] font-extrabold"
-                      style={{
-                        borderColor: 'rgb(var(--lp-accent-secondary-rgb) / 0.30)',
-                        background: 'rgb(var(--lp-accent-secondary-rgb) / 0.14)',
-                        color: 'var(--lp-text)',
-                      }}
-                    >
-                      “meeting”
-                    </span>
-                    <span
-                      className="h-6 rounded-full border px-3 text-[11px] font-extrabold"
-                      style={{ borderColor: 'var(--lp-border)', background: 'var(--lp-surface)', color: 'var(--lp-text-secondary)' }}
-                    >
-                      9 results
-                    </span>
+                  <div className="text-left">
+                    <div className="flex items-center gap-1">
+                      {[...Array(5)].map((_, i) => (
+                        <svg key={i} width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ color: 'var(--lp-accent-primary)' }}>
+                          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                        </svg>
+                      ))}
+                    </div>
+                    <div className="text-xs" style={{ color: 'var(--lp-text-muted)' }}>
+                      Trusted by 10,000+ writers
+                    </div>
                   </div>
                 </div>
+              </FadeIn>
+            </div>
+
+            {/* Hero Image */}
+            <FadeIn delay={0.5} direction="up">
+              <motion.div 
+                className="relative mx-auto mt-16 max-w-5xl"
+                animate={{ y: [0, -10, 0] }}
+                transition={{ duration: 6, ease: 'easeInOut', repeat: Infinity }}
+              >
+                <motion.div 
+                  className="absolute -inset-4 rounded-[2rem] blur-2xl"
+                  style={{ background: 'rgb(var(--lp-accent-primary-rgb) / 0.15)' }}
+                  animate={{ opacity: [0.5, 0.8, 0.5], scale: [1, 1.05, 1] }}
+                  transition={{ duration: 4, ease: 'easeInOut', repeat: Infinity }}
+                />
+                <motion.div 
+                  className="relative overflow-hidden rounded-2xl border shadow-2xl"
+                  style={{ borderColor: 'var(--lp-border)', background: 'var(--lp-surface)' }}
+                  whileHover={{ scale: 1.02, y: -10 }}
+                  transition={{ type: 'spring', stiffness: 200, damping: 20 }}
+                >
+                  <img 
+                    src="/memora-dashboard.png" 
+                    alt="Memora Dashboard" 
+                    className="w-full"
+                    style={{ display: 'block' }}
+                  />
+                </motion.div>
               </motion.div>
+            </FadeIn>
+          </Container>
+        </section>
+
+        {/* --- Quick Stats --- */}
+        <section className="border-y py-12" style={{ borderColor: 'var(--lp-border)', background: 'var(--lp-surface)' }}>
+          <Container>
+            <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
+              {[
+                { value: '50K+', label: 'Notes created' },
+                { value: '10K+', label: 'Active writers' },
+                { value: '99.9%', label: 'Uptime' },
+                { value: '4.9/5', label: 'User rating' },
+              ].map((stat, i) => (
+                <FadeIn delay={i * 0.1}>
+                  <motion.div 
+                    className="text-center cursor-pointer"
+                    whileHover={{ scale: 1.1, y: -5 }}
+                    transition={{ type: 'spring', stiffness: 300 }}
+                  >
+                    <motion.div 
+                      className="text-3xl font-bold"
+                      style={{ color: 'var(--lp-accent-primary)' }}
+                      initial={{ opacity: 0, scale: 0.5 }}
+                      whileInView={{ opacity: 1, scale: 1 }}
+                      viewport={{ once: true }}
+                      transition={{ type: 'spring', stiffness: 200, delay: i * 0.1 + 0.2 }}
+                    >
+                      {stat.value}
+                    </motion.div>
+                    <div className="mt-1 text-sm font-medium" style={{ color: 'var(--lp-text-secondary)' }}>{stat.label}</div>
+                  </motion.div>
+                </FadeIn>
+              ))}
             </div>
           </Container>
         </section>
 
-        <Section className="pt-10 pb-10" style={{ background: 'var(--lp-bg-2)' }}>
-          <FadeIn>
-            <div className="mx-auto grid max-w-6xl gap-3 sm:grid-cols-3">
-              {[{ k: '2 min', t: 'Setup', d: 'Start fast' }, { k: 'PDF/MD/TXT', t: 'Export', d: 'Portable notes' }, { k: 'Links', t: 'Sharing', d: 'Send when needed' }].map(
-                (item) => (
-                  <div
-                    key={item.t}
-                    className="rounded-[22px] border p-5"
-                    style={{ borderColor: 'var(--lp-border)', background: 'var(--lp-surface-strong)', boxShadow: 'var(--lp-shadow)' }}
-                  >
-                    <div className="text-xs font-black" style={{ color: 'var(--lp-text-muted)' }}>
-                      {item.k}
+        {/* --- Features --- */}
+        <section id="features" className="py-24 lg:py-32">
+          <Container>
+            <div className="mx-auto max-w-2xl text-center">
+              <FadeIn>
+                <Badge>Features</Badge>
+              </FadeIn>
+              <FadeIn delay={0.1}>
+                <h2 className="mt-6 text-4xl font-bold tracking-tight sm:text-5xl" style={{ letterSpacing: '-0.02em' }}>
+                  Everything you need to capture ideas
+                </h2>
+              </FadeIn>
+              <FadeIn delay={0.2}>
+                <p className="mt-4 text-lg" style={{ color: 'var(--lp-text-secondary)' }}>
+                  No clutter. No complexity. Just the right tools to help you think and write better.
+                </p>
+              </FadeIn>
+            </div>
+
+            <div className="mt-16 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              <FeatureCard 
+                icon={icons.write}
+                title="Distraction-free writing"
+                description="A clean, minimal editor that puts your words first. No formatting toolbars in the way."
+                delay={0}
+              />
+              <FeatureCard 
+                icon={icons.search}
+                title="Instant search"
+                description="Find any note in milliseconds. Search across titles, content, and even inside PDFs."
+                delay={0.1}
+              />
+              <FeatureCard 
+                icon={icons.colors}
+                title="Color-coded organization"
+                description="Assign colors to notes based on mood, priority, or project. Visual organization at a glance."
+                delay={0.2}
+              />
+              <FeatureCard 
+                icon={icons.share}
+                title="Share with a link"
+                description="Generate public links for any note. Share with teammates, friends, or the world."
+                delay={0.3}
+              />
+              <FeatureCard 
+                icon={icons.export}
+                title="Export anywhere"
+                description="Download your notes as PDF, Markdown, or plain text. Your data, your way."
+                delay={0.4}
+              />
+              <FeatureCard 
+                icon={icons.lock}
+                title="Private by default"
+                description="End-to-end encryption for sensitive notes. We can't read them, and neither can anyone else."
+                delay={0.5}
+              />
+            </div>
+          </Container>
+        </section>
+
+        {/* --- How It Works --- */}
+        <section className="py-24" style={{ background: 'var(--lp-surface)' }}>
+          <Container>
+            <div className="mx-auto max-w-2xl text-center">
+              <FadeIn>
+                <Badge>How It Works</Badge>
+              </FadeIn>
+              <FadeIn delay={0.1}>
+                <h2 className="mt-6 text-4xl font-bold tracking-tight" style={{ letterSpacing: '-0.02em' }}>
+                  Start writing in 30 seconds
+                </h2>
+              </FadeIn>
+            </div>
+
+            <div className="mt-16 grid gap-8 md:grid-cols-3">
+              {[
+                { step: '01', title: 'Create your account', description: 'Sign up with email or Google. No credit card required.' },
+                { step: '02', title: 'Write your first note', description: 'Just start typing. We\'ll handle saving, formatting, and organization.' },
+                { step: '03', title: 'Find it instantly', description: 'Search across all your notes with our lightning-fast search.' },
+              ].map((item, i) => (
+                <FadeIn key={i} delay={i * 0.15}>
+                  <div className="relative">
+                    <div 
+                      className="mb-4 text-6xl font-bold"
+                      style={{ color: 'rgb(var(--lp-accent-primary-rgb) / 0.15)' }}
+                    >
+                      {item.step}
                     </div>
-                    <div className="mt-2 text-base font-black tracking-tight" style={{ color: 'var(--lp-text)' }}>
-                      {item.t}
-                    </div>
-                    <div className="mt-1 text-sm font-bold" style={{ color: 'var(--lp-text-secondary)' }}>
-                      {item.d}
-                    </div>
+                    <h3 className="mb-2 text-xl font-bold" style={{ color: 'var(--lp-text)' }}>{item.title}</h3>
+                    <p className="text-sm leading-relaxed" style={{ color: 'var(--lp-text-secondary)' }}>{item.description}</p>
                   </div>
-                )
-              )}
+                </FadeIn>
+              ))}
             </div>
-          </FadeIn>
-        </Section>
+          </Container>
+        </section>
 
-        <Section id="features" className="py-16 sm:py-24" style={{ background: 'var(--lp-bg-2)' }}>
-          <FadeIn>
-            <div className="text-center max-w-2xl mx-auto">
-              <div className="text-[11px] font-extrabold uppercase tracking-[0.24em]" style={{ color: 'var(--lp-text-muted)' }}>
-                Features
-              </div>
-              <h2 className="mt-3 text-3xl font-black tracking-tight sm:text-4xl" style={{ letterSpacing: '-0.03em' }}>
-                Built to keep you in flow.
-              </h2>
-              <p className="mt-3 text-sm leading-relaxed sm:text-base mx-auto" style={{ color: 'var(--lp-text-secondary)', maxWidth: '32rem' }}>
-                A writing-first editor, quick navigation, and just enough structure to keep your week clear.
-              </p>
+        {/* --- Use Cases --- */}
+        <section className="py-24 lg:py-32" style={{ background: 'var(--lp-bg-2)' }}>
+          <Container>
+            <div className="mx-auto max-w-2xl text-center">
+              <FadeIn>
+                <Badge>Who It's For</Badge>
+              </FadeIn>
+              <FadeIn delay={0.1}>
+                <h2 className="mt-6 text-4xl font-bold tracking-tight" style={{ letterSpacing: '-0.02em' }}>
+                  Perfect for every kind of thinker
+                </h2>
+              </FadeIn>
             </div>
-          </FadeIn>
 
-          {/* ── Bento Grid ── */}
-          <div className="mt-12 grid gap-4 md:grid-cols-12">
+            <div className="mt-16 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+              {[
+                { icon: <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--lp-accent-primary)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>, title: 'Students', desc: 'Capture lecture notes, research, and ideas. Study smarter with instant search.' },
+                { icon: <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--lp-accent-primary)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>, title: 'Writers', desc: 'Draft articles, stories, and books. Distraction-free environment for deep work.' },
+                { icon: <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--lp-accent-primary)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>, title: 'Professionals', desc: 'Meeting notes, project planning, and documentation. Keep everything organized.' },
+                { icon: <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--lp-accent-primary)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m12.728 0l-.707.707M6.343 17.657A4 4 0 0 1 8 11.165a3 3 0 1 1 8 0 4 4 0 0 1 1.657 6.492"/></svg>, title: 'Thinkers', desc: 'Journal daily, track ideas, and build a personal knowledge base.' },
+              ].map((item, i) => (
+                <FadeIn key={i} delay={i * 0.1}>
+                  <motion.div 
+                    className="group rounded-3xl border p-8 text-center transition-all duration-300 hover:-translate-y-2 hover:shadow-xl cursor-pointer"
+                    style={{ borderColor: 'var(--lp-border)', background: 'var(--lp-surface)' }}
+                    whileHover={{ scale: 1.02 }}
+                    transition={{ type: 'spring', stiffness: 300 }}
+                  >
+                    <div className="mb-4 text-4xl transition-transform duration-300 group-hover:scale-125">{item.icon}</div>
+                    <h3 className="mb-2 text-lg font-bold" style={{ color: 'var(--lp-text)' }}>{item.title}</h3>
+                    <p className="text-sm leading-relaxed" style={{ color: 'var(--lp-text-secondary)' }}>{item.desc}</p>
+                  </motion.div>
+                </FadeIn>
+              ))}
+            </div>
+          </Container>
+        </section>
 
-            {/* ─ ROW 1: Editor (wide) + Search ─ */}
-            <FadeIn className="md:col-span-8">
-              <BentoCard
-                className="p-6 sm:p-8 h-full"
-                style={{
-                  background:
-                    'radial-gradient(800px 500px at 18% 18%, rgb(var(--lp-accent-primary-rgb) / 0.14), transparent 62%), var(--lp-surface-tint)',
+        {/* --- FAQ Section --- */}
+        <section id="faq" className="py-24" style={{ background: 'var(--lp-surface)' }}>
+          <Container>
+            <div className="mx-auto max-w-2xl text-center">
+              <FadeIn>
+                <Badge>FAQ</Badge>
+              </FadeIn>
+              <FadeIn delay={0.1}>
+                <h2 className="mt-6 text-4xl font-bold tracking-tight" style={{ letterSpacing: '-0.02em' }}>
+                  Questions? We've got answers
+                </h2>
+              </FadeIn>
+            </div>
+
+            <div className="mt-16 mx-auto max-w-3xl space-y-4">
+              {[
+                { q: 'Is Memora really free?', a: 'Yes! Memora is completely free to use. All core features—unlimited notes, search, and sharing—are available at no cost.' },
+                { q: 'Can I access my notes offline?', a: 'Absolutely. Memora works offline by default. Your notes are stored locally and sync when you reconnect.' },
+                { q: 'How is my data secured?', a: 'Your notes are encrypted end-to-end. We can\'t read them, and neither can anyone else. Your privacy is our priority.' },
+                { q: 'Can I export my notes?', a: 'Yes! Export your notes as PDF, Markdown, or plain text. Your data, your way—anytime you want.' },
+                { q: 'Is there a mobile app?', a: 'Memora is a progressive web app (PWA). Install it on your phone for a native app experience without the app store.' },
+              ].map((faq, i) => (
+                <FAQItem key={i} question={faq.q} answer={faq.a} delay={i * 0.1} />
+              ))}
+            </div>
+          </Container>
+        </section>
+
+        {/* --- Testimonials --- */}
+        <section id="testimonials" className="py-24 lg:py-32">
+          <Container>
+            <div className="mx-auto max-w-2xl text-center">
+              <FadeIn>
+                <Badge>Reviews</Badge>
+              </FadeIn>
+              <FadeIn delay={0.1}>
+                <h2 className="mt-6 text-4xl font-bold tracking-tight" style={{ letterSpacing: '-0.02em' }}>
+                  Loved by thinkers worldwide
+                </h2>
+              </FadeIn>
+            </div>
+
+            <div className="mt-16 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              <TestimonialCard 
+                quote="Memora replaced three apps for me. It's the first notes app that doesn't get in the way of my thinking."
+                author="Sarah Chen"
+                role="Product Designer at Spotify"
+                delay={0}
+              />
+              <TestimonialCard 
+                quote="The search is magic. I can find a note I wrote two years ago in seconds. Game changer for my research."
+                author="Marcus Johnson"
+                role="PhD Candidate"
+                delay={0.1}
+              />
+              <TestimonialCard 
+                quote="Finally, a notes app that understands I want to WRITE, not fiddle with formatting menus all day."
+                author="Elena Rodriguez"
+                role="Journalist"
+                delay={0.2}
+              />
+              <TestimonialCard 
+                quote="I use Memora for everything—meeting notes, journaling, drafts. The color coding keeps my chaotic brain organized."
+                author="David Park"
+                role="Engineering Manager"
+                delay={0.3}
+              />
+              <TestimonialCard 
+                quote="Switched from Notion because I needed something faster. Memora loads instantly and never lags."
+                author="Amanda Foster"
+                role="Startup Founder"
+                delay={0.4}
+              />
+              <TestimonialCard 
+                quote="The sharing feature is perfect. I draft blog posts in Memora and share the link with my editor instantly."
+                author="James Wilson"
+                role="Content Creator"
+                delay={0.5}
+              />
+            </div>
+          </Container>
+        </section>
+
+        {/* --- CTA Section --- */}
+        <section className="py-24 lg:py-32">
+          <Container>
+            <FadeIn>
+              <div 
+                className="relative overflow-hidden rounded-3xl px-8 py-16 text-center lg:px-16 lg:py-24"
+                style={{ 
+                  background: 'linear-gradient(135deg, var(--lp-accent-primary), var(--lp-accent-secondary))',
                 }}
               >
-                <div className="flex items-center gap-3 mb-5">
-                  <FeatureIcon>
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                      <path d="M7 7h10M7 12h7M7 17h10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                    </svg>
-                  </FeatureIcon>
-                  <div>
-                    <div className="text-base font-black tracking-tight" style={{ letterSpacing: '-0.02em' }}>
-                      Write like you mean it
-                    </div>
-                    <div className="text-sm" style={{ color: 'var(--lp-text-secondary)' }}>
-                      Blocks, checklists, links — clean defaults that keep focus on your words.
-                    </div>
-                  </div>
-                </div>
-
-                <div
-                  className="rounded-[18px] border p-5"
-                  style={{ borderColor: 'var(--lp-border)', background: 'var(--lp-surface-strong)' }}
-                >
-                  <div className="flex flex-wrap gap-2 mb-5">
-                    {['Heading', 'To-do', 'Code', 'Link'].map((t) => (
-                      <span
-                        key={t}
-                        className="inline-flex h-7 items-center rounded-full border px-3 text-[11px] font-extrabold"
-                        style={{ borderColor: 'var(--lp-border)', background: 'rgb(255 255 255 / 0.03)', color: 'var(--lp-text-secondary)' }}
-                      >
-                        {t}
-                      </span>
-                    ))}
-                  </div>
-                  <motion.div
-                    className="h-5 w-3/5 rounded-full"
-                    style={{ background: 'rgb(var(--lp-accent-primary-rgb) / 0.16)' }}
-                    animate={reduceMotion ? undefined : { opacity: [0.55, 0.95, 0.55] }}
-                    transition={reduceMotion ? undefined : { duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
-                  />
-                  <div className="mt-4 grid gap-3">
-                    {[{ w: 'w-full' }, { w: 'w-11/12' }, { w: 'w-4/5' }].map((l, i) => (
-                      <motion.div
-                        key={i}
-                        className={`h-3 ${l.w} rounded-full`}
-                        style={{ background: 'rgb(148 163 184 / 0.18)' }}
-                        animate={reduceMotion ? undefined : { opacity: [0.55, 0.9, 0.55] }}
-                        transition={reduceMotion ? undefined : { duration: 2.6, repeat: Infinity, ease: 'easeInOut', delay: i * 0.15 }}
-                      />
-                    ))}
-                  </div>
-                  <div className="mt-5 grid gap-3">
-                    {[0, 1, 2].map((i) => (
-                      <div key={i} className="flex items-center gap-3">
-                        <motion.span
-                          className="h-4 w-4 rounded-[6px] border"
-                          style={{ borderColor: 'var(--lp-border)', background: 'rgb(255 255 255 / 0.02)' }}
-                          animate={
-                            reduceMotion
-                              ? undefined
-                              : {
-                                background:
-                                  i === 1
-                                    ? ['rgb(255 255 255 / 0.02)', 'rgb(var(--lp-accent-tertiary-rgb) / 0.14)', 'rgb(255 255 255 / 0.02)']
-                                    : undefined,
-                              }
-                          }
-                          transition={reduceMotion ? undefined : { duration: 2.6, repeat: Infinity, ease: 'easeInOut', delay: i * 0.12 }}
-                        />
-                        <div className="h-3 flex-1 rounded-full" style={{ background: 'rgb(148 163 184 / 0.20)' }} />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </BentoCard>
-            </FadeIn>
-
-            <FadeIn className="md:col-span-4" delay={0.05}>
-              <BentoCard className="p-6 h-full" style={{ background: 'var(--lp-surface-strong)' }}>
-                <div className="flex items-center gap-3 mb-5">
-                  <FeatureIcon>
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                      <path d="M10 18a8 8 0 1 1 5.3-14.1A8 8 0 0 1 10 18Z" stroke="currentColor" strokeWidth="2" />
-                      <path d="m21 21-4.3-4.3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                    </svg>
-                  </FeatureIcon>
-                  <div>
-                    <div className="text-base font-black tracking-tight" style={{ letterSpacing: '-0.02em' }}>
-                      Find anything
-                    </div>
-                    <div className="text-sm" style={{ color: 'var(--lp-text-secondary)' }}>
-                      Instant search across all your notes.
-                    </div>
-                  </div>
-                </div>
-
-                <div
-                  className="rounded-[16px] border px-4 py-3 mb-3"
-                  style={{ borderColor: 'var(--lp-border)', background: 'rgb(255 255 255 / 0.03)' }}
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="h-2.5 w-2/3 rounded-full" style={{ background: 'rgb(148 163 184 / 0.20)' }} />
-                    <motion.span
-                      className="inline-flex h-7 items-center rounded-full border px-3 text-[11px] font-extrabold"
-                      style={{
-                        borderColor: 'rgb(var(--lp-accent-secondary-rgb) / 0.30)',
-                        background: 'rgb(var(--lp-accent-secondary-rgb) / 0.14)',
-                        color: 'var(--lp-text)',
-                      }}
-                      animate={reduceMotion ? undefined : { scale: [1, 1.04, 1] }}
-                      transition={reduceMotion ? undefined : { duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
-                    >
-                      Ctrl K
-                    </motion.span>
-                  </div>
-                </div>
-                <div className="grid gap-2">
-                  {[0, 1, 2].map((i) => (
-                    <motion.div
-                      key={i}
-                      className="rounded-[14px] border px-4 py-2.5"
-                      style={{
-                        borderColor: 'var(--lp-border)',
-                        background: i === 0 ? 'rgb(var(--lp-accent-primary-rgb) / 0.08)' : 'rgb(255 255 255 / 0.03)',
-                      }}
-                      animate={
-                        reduceMotion
-                          ? undefined
-                          : {
-                            background:
-                              i === 0
-                                ? ['rgb(var(--lp-accent-primary-rgb) / 0.08)', 'rgb(255 255 255 / 0.03)', 'rgb(255 255 255 / 0.03)']
-                                : i === 1
-                                  ? ['rgb(255 255 255 / 0.03)', 'rgb(var(--lp-accent-primary-rgb) / 0.08)', 'rgb(255 255 255 / 0.03)']
-                                  : ['rgb(255 255 255 / 0.03)', 'rgb(255 255 255 / 0.03)', 'rgb(var(--lp-accent-primary-rgb) / 0.08)'],
-                          }
-                      }
-                      transition={reduceMotion ? undefined : { duration: 2.7, repeat: Infinity, ease: 'easeInOut', delay: 0.05 * i }}
-                    >
-                      <div className="h-2.5 w-3/5 rounded-full" style={{ background: 'rgb(148 163 184 / 0.24)' }} />
-                      <div className="mt-1.5 h-2 w-full rounded-full" style={{ background: 'rgb(148 163 184 / 0.14)' }} />
-                    </motion.div>
-                  ))}
-                </div>
-              </BentoCard>
-            </FadeIn>
-
-            {/* ─ ROW 2: Colors + Autosave + Sharing ─ */}
-            <FadeIn className="md:col-span-4" delay={0.08}>
-              <BentoCard className="p-6 h-full" style={{ background: 'var(--lp-surface-strong)' }}>
-                <div className="flex items-center gap-3 mb-5">
-                  <FeatureIcon>
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                      <path d="M12 3v6m0 12v-6M3 12h6m12 0h-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                    </svg>
-                  </FeatureIcon>
-                  <div>
-                    <div className="text-base font-black tracking-tight" style={{ letterSpacing: '-0.02em' }}>
-                      Color-coded notes
-                    </div>
-                    <div className="text-sm" style={{ color: 'var(--lp-text-secondary)' }}>
-                      Organize by color, mood, or priority.
-                    </div>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-5 gap-2 mb-4">
-                  {[
-                    { bg: 'rgb(var(--lp-accent-primary-rgb) / 0.16)', border: 'rgb(var(--lp-accent-primary-rgb) / 0.30)' },
-                    { bg: 'rgb(var(--lp-accent-secondary-rgb) / 0.14)', border: 'rgb(var(--lp-accent-secondary-rgb) / 0.30)' },
-                    { bg: 'rgb(var(--lp-accent-tertiary-rgb) / 0.12)', border: 'rgb(var(--lp-accent-tertiary-rgb) / 0.28)' },
-                    { bg: 'rgb(251 113 133 / 0.10)', border: 'rgb(251 113 133 / 0.22)' },
-                    { bg: 'rgb(250 204 21 / 0.10)', border: 'rgb(250 204 21 / 0.22)' },
-                  ].map((c, idx) => (
-                    <motion.div
-                      key={idx}
-                      className="h-10 rounded-[14px] border"
-                      style={{ borderColor: c.border, background: c.bg }}
-                      animate={reduceMotion ? undefined : { y: [0, -3, 0] }}
-                      transition={reduceMotion ? undefined : { duration: 2, repeat: Infinity, ease: 'easeInOut', delay: idx * 0.14 }}
-                    />
-                  ))}
-                </div>
-                {[0, 1].map((i) => (
-                  <div
-                    key={i}
-                    className="rounded-[14px] border px-4 py-2.5 mb-2 flex items-center justify-between"
-                    style={{ borderColor: 'var(--lp-border)', background: 'rgb(255 255 255 / 0.03)' }}
-                  >
-                    <div className="h-2.5 w-1/3 rounded-full" style={{ background: 'rgb(148 163 184 / 0.22)' }} />
-                    <div className="flex gap-1.5">
-                      {[0, 1, 2].map((j) => (
-                        <span
-                          key={j}
-                          className="h-3.5 w-3.5 rounded-full border"
-                          style={{
-                            borderColor: j === 0 ? 'rgb(var(--lp-accent-primary-rgb) / 0.30)' : 'var(--lp-border)',
-                            background: j === 0 ? 'rgb(var(--lp-accent-primary-rgb) / 0.16)' : 'rgb(255 255 255 / 0.03)',
-                          }}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </BentoCard>
-            </FadeIn>
-
-            <FadeIn className="md:col-span-4" delay={0.1}>
-              <BentoCard className="p-6 h-full" style={{ background: 'var(--lp-surface-strong)' }}>
-                <div className="flex items-center gap-3 mb-5">
-                  <FeatureIcon>
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                      <path d="M12 6v6l4 2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                      <path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" stroke="currentColor" strokeWidth="2" />
-                    </svg>
-                  </FeatureIcon>
-                  <div>
-                    <div className="text-base font-black tracking-tight" style={{ letterSpacing: '-0.02em' }}>
-                      Autosave, always
-                    </div>
-                    <div className="text-sm" style={{ color: 'var(--lp-text-secondary)' }}>
-                      Your momentum stays uninterrupted.
-                    </div>
-                  </div>
-                </div>
-
-                <div
-                  className="rounded-[16px] border px-4 py-3 mb-3"
-                  style={{ borderColor: 'var(--lp-border)', background: 'rgb(255 255 255 / 0.03)' }}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="text-xs font-black" style={{ color: 'var(--lp-text-muted)' }}>
-                      <motion.span
-                        style={{ display: 'inline-block' }}
-                        animate={reduceMotion ? undefined : { opacity: [1, 0.35, 1] }}
-                        transition={reduceMotion ? undefined : { duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
-                      >
-                        Saving…
-                      </motion.span>
-                    </div>
-                    <motion.div
-                      className="h-2 w-2 rounded-full"
-                      style={{ background: 'rgb(var(--lp-accent-tertiary-rgb))' }}
-                      animate={reduceMotion ? undefined : { scale: [1, 1.4, 1], opacity: [1, 0.6, 1] }}
-                      transition={reduceMotion ? undefined : { duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
-                    />
-                  </div>
-                </div>
-                <div className="grid gap-2">
-                  {[0, 1, 2].map((i) => (
-                    <div
-                      key={i}
-                      className="rounded-[14px] border px-4 py-2.5"
-                      style={{ borderColor: 'var(--lp-border)', background: 'rgb(255 255 255 / 0.03)' }}
-                    >
-                      <div className="flex items-center justify-between">
-                        <motion.div
-                          className="h-2.5 w-2/5 rounded-full"
-                          style={{ background: 'rgb(148 163 184 / 0.18)' }}
-                          animate={reduceMotion ? undefined : { opacity: [0.55, 0.92, 0.55] }}
-                          transition={reduceMotion ? undefined : { duration: 2.2, repeat: Infinity, ease: 'easeInOut', delay: 0.12 * i }}
-                        />
-                        <div className="h-2 w-14 rounded-full" style={{ background: 'rgb(148 163 184 / 0.12)' }} />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </BentoCard>
-            </FadeIn>
-
-            <FadeIn className="md:col-span-4" delay={0.12}>
-              <BentoCard className="p-6 h-full" style={{ background: 'var(--lp-surface-strong)' }}>
-                <div className="flex items-center gap-3 mb-5">
-                  <FeatureIcon>
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                      <path d="M9 12a3 3 0 0 1 3-3h7a3 3 0 0 1 0 6h-2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                      <path d="M15 12a3 3 0 0 1-3 3H5a3 3 0 1 1 0-6h2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                    </svg>
-                  </FeatureIcon>
-                  <div>
-                    <div className="text-base font-black tracking-tight" style={{ letterSpacing: '-0.02em' }}>
-                      Share with a link
-                    </div>
-                    <div className="text-sm" style={{ color: 'var(--lp-text-secondary)' }}>
-                      Send when needed. Keep everything else private.
-                    </div>
-                  </div>
-                </div>
-
-                <motion.div
-                  className="rounded-[16px] border px-4 py-3 mb-3"
-                  style={{ borderColor: 'var(--lp-border)', background: 'rgb(255 255 255 / 0.03)' }}
-                  animate={
-                    reduceMotion
-                      ? undefined
-                      : {
-                        borderColor: ['var(--lp-border)', 'rgb(var(--lp-accent-tertiary-rgb) / 0.30)', 'var(--lp-border)'],
-                        background: ['rgb(255 255 255 / 0.03)', 'rgb(var(--lp-accent-tertiary-rgb) / 0.08)', 'rgb(255 255 255 / 0.03)'],
-                      }
-                  }
-                  transition={reduceMotion ? undefined : { duration: 2.6, repeat: Infinity, ease: 'easeInOut' }}
-                >
-                  <div className="text-xs font-black mb-2" style={{ color: 'var(--lp-text)' }}>
-                    Share link
-                  </div>
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="h-2.5 flex-1 rounded-full" style={{ background: 'rgb(148 163 184 / 0.20)' }} />
-                    <motion.span
-                      className="inline-flex h-7 items-center rounded-full border px-3 text-[11px] font-extrabold"
-                      style={{
-                        borderColor: 'rgb(var(--lp-accent-tertiary-rgb) / 0.28)',
-                        background: 'rgb(var(--lp-accent-tertiary-rgb) / 0.12)',
-                        color: 'var(--lp-text)',
-                      }}
-                      animate={reduceMotion ? undefined : { scale: [1, 1.03, 1] }}
-                      transition={reduceMotion ? undefined : { duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
-                    >
-                      Copy
-                    </motion.span>
-                  </div>
-                </motion.div>
-                <div
-                  className="rounded-[14px] border px-4 py-2.5 flex items-center justify-between"
-                  style={{ borderColor: 'var(--lp-border)', background: 'rgb(255 255 255 / 0.03)' }}
-                >
-                  <div>
-                    <div className="text-xs font-black" style={{ color: 'var(--lp-text)' }}>Access</div>
-                    <div className="text-[11px] font-bold" style={{ color: 'var(--lp-text-muted)' }}>view-only</div>
-                  </div>
-                  <span
-                    className="inline-flex h-6 items-center rounded-full border px-3 text-[10px] font-extrabold"
-                    style={{ borderColor: 'var(--lp-border)', background: 'rgb(255 255 255 / 0.02)', color: 'var(--lp-text-secondary)' }}
-                  >
-                    Public link
-                  </span>
-                </div>
-              </BentoCard>
-            </FadeIn>
-
-          </div>
-        </Section>
-
-
-        <Section id="how" className="py-16 sm:py-24" style={{ background: 'var(--lp-bg-1)' }}>
-          <FadeIn>
-            <div className="max-w-2xl">
-              <div className="text-[11px] font-extrabold uppercase tracking-[0.24em]" style={{ color: 'var(--lp-text-muted)' }}>
-                How it works
-              </div>
-              <h2 className="mt-3 text-3xl font-black tracking-tight sm:text-4xl" style={{ letterSpacing: '-0.03em' }}>
-                Three steps. No setup overhead.
-              </h2>
-            </div>
-          </FadeIn>
-
-          <div className="mt-10 grid gap-4 md:grid-cols-3">
-            {[
-              { title: 'Create account', desc: 'Start in seconds with a clean workspace.' },
-              { title: 'Write notes', desc: 'Blocks, checklists, links — your way.' },
-              { title: 'Share or organize', desc: 'Send a link or color-code to stay clear.' },
-            ].map((s, i) => (
-              <FadeIn key={s.title} delay={i * 0.05}>
-                <motion.div
-                  whileHover={reduceMotion ? undefined : { y: -2 }}
-                  className="rounded-[22px] border p-6"
-                  style={{ borderColor: 'var(--lp-border)', background: 'var(--lp-surface)' }}
-                >
-                  <div className="text-xs font-black" style={{ color: 'var(--lp-text-muted)' }}>
-                    0{i + 1}
-                  </div>
-                  <div className="mt-2 text-lg font-black tracking-tight" style={{ letterSpacing: '-0.02em' }}>
-                    {s.title}
-                  </div>
-                  <div className="mt-1 text-sm leading-relaxed" style={{ color: 'var(--lp-text-secondary)' }}>
-                    {s.desc}
-                  </div>
-                </motion.div>
-              </FadeIn>
-            ))}
-          </div>
-        </Section>
-
-        <Section id="showcase" className="py-16 sm:py-24" style={{ background: 'var(--lp-bg-2)' }}>
-          <FadeIn>
-            <div
-              className="relative overflow-hidden rounded-[28px] border p-6 sm:p-10"
-              style={{
-                borderColor: 'var(--lp-border)',
-                background:
-                  'radial-gradient(960px 580px at 18% 18%, rgb(var(--lp-accent-primary-rgb) / 0.14), transparent 62%), radial-gradient(880px 580px at 82% 10%, rgb(var(--lp-accent-secondary-rgb) / 0.10), transparent 62%), radial-gradient(820px 560px at 66% 84%, rgb(var(--lp-accent-tertiary-rgb) / 0.08), transparent 66%), var(--lp-surface-tint)',
-                boxShadow: 'var(--lp-shadow-strong)',
-              }}
-            >
-              <div className="grid items-center gap-10 lg:grid-cols-[0.52fr_0.48fr]">
-                <div>
-                  <div className="text-[11px] font-extrabold uppercase tracking-[0.24em]" style={{ color: 'var(--lp-text-muted)' }}>
-                    Showcase
-                  </div>
-                  <h2 className="mt-3 text-3xl font-black tracking-tight sm:text-4xl" style={{ letterSpacing: '-0.03em' }}>
-                    Your dashboard, quietly powerful.
+                <div className="relative z-10">
+                  <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl lg:text-5xl" style={{ letterSpacing: '-0.02em' }}>
+                    Ready to start writing?
                   </h2>
-                  <p className="mt-3 max-w-prose text-sm leading-relaxed sm:text-base" style={{ color: 'var(--lp-text-secondary)' }}>
-                    A calm overview of your notes — designed to keep you moving without distraction.
+                  <p className="mx-auto mt-4 max-w-xl text-lg text-white/90">
+                    Join 10,000+ writers who've found their perfect note-taking home.
                   </p>
-                </div>
-
-                <motion.div
-                  initial={reduceMotion ? false : { opacity: 0, y: 18 }}
-                  whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
-                  viewport={{ once: true, amount: 0.35 }}
-                  transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
-                >
-                  <div className="relative">
-                    <div
-                      className="pointer-events-none absolute -inset-10 rounded-[40px]"
-                      aria-hidden="true"
-                      style={{
-                        background:
-                          'radial-gradient(closest-side at 30% 35%, rgb(var(--lp-accent-primary-rgb) / 0.34), transparent 72%), radial-gradient(closest-side at 72% 45%, rgb(var(--lp-accent-secondary-rgb) / 0.22), transparent 74%), radial-gradient(closest-side at 55% 85%, rgb(var(--lp-accent-tertiary-rgb) / 0.16), transparent 74%)',
-                        filter: 'blur(22px)',
-                        opacity: 0.75,
-                      }}
-                    />
-                    <ScreenshotFrame title="Memora" src="/memora-dashboard.png" alt="Memora dashboard" />
-                  </div>
-                </motion.div>
-              </div>
-            </div>
-          </FadeIn>
-        </Section>
-
-        <Section id="stories" className="py-16 sm:py-24" style={{ background: 'var(--lp-bg-1)' }}>
-          <FadeIn>
-            <div className="max-w-2xl">
-              <div className="text-[11px] font-extrabold uppercase tracking-[0.24em]" style={{ color: 'var(--lp-text-muted)' }}>
-                Testimonials
-              </div>
-              <h2 className="mt-3 text-3xl font-black tracking-tight sm:text-4xl" style={{ letterSpacing: '-0.03em' }}>
-                A tool people settle into.
-              </h2>
-            </div>
-          </FadeIn>
-
-          <div className="mt-10 grid items-stretch gap-4 lg:grid-cols-3">
-            {[
-              {
-                name: 'Nadia B.',
-                role: 'Product designer',
-                quote: 'The editor feels calm. I can think in paragraphs again — without tweaking formatting every 10 seconds.',
-              },
-              {
-                name: 'Sam R.',
-                role: 'Frontend engineer',
-                quote: 'Search is genuinely fast. I stopped making duplicate notes because I can actually find the old ones.',
-              },
-              {
-                name: 'Leo K.',
-                role: 'Founder',
-                quote: 'Color notes is subtle but perfect. It’s just enough structure to keep my week clear.',
-              },
-            ].map((t, i) => (
-              <FadeIn key={t.name} delay={i * 0.05}>
-                <motion.div
-                  whileHover={reduceMotion ? undefined : { y: -2 }}
-                  className="flex h-full flex-col rounded-[22px] border p-6"
-                  style={{ borderColor: 'var(--lp-border)', background: 'var(--lp-surface-tint)', boxShadow: 'var(--lp-shadow)' }}
-                >
-                  <div className="text-sm font-bold leading-relaxed" style={{ color: 'var(--lp-text-secondary)' }}>
-                    <span
-                      aria-hidden="true"
-                      style={{
-                        background: 'linear-gradient(135deg, var(--lp-accent-primary), var(--lp-accent-secondary))',
-                        WebkitBackgroundClip: 'text',
-                        backgroundClip: 'text',
-                        color: 'transparent',
-                        fontWeight: 900,
-                      }}
-                    >
-                      “
-                    </span>
-                    {t.quote}
-                    <span
-                      aria-hidden="true"
-                      style={{
-                        background: 'linear-gradient(135deg, var(--lp-accent-primary), var(--lp-accent-secondary))',
-                        WebkitBackgroundClip: 'text',
-                        backgroundClip: 'text',
-                        color: 'transparent',
-                        fontWeight: 900,
-                      }}
-                    >
-                      ”
-                    </span>
-                  </div>
-                  <div className="mt-auto flex items-center justify-between pt-6">
-                    <div>
-                      <div className="text-sm font-black" style={{ color: 'var(--lp-text)' }}>
-                        {t.name}
-                      </div>
-                      <div className="mt-1 text-xs font-bold" style={{ color: 'var(--lp-text-muted)' }}>
-                        {t.role}
-                      </div>
-                    </div>
-                    <span
-                      className="h-9 w-9 rounded-full border"
-                      style={{
-                        borderColor: 'var(--lp-border)',
-                        background:
-                          'linear-gradient(135deg, rgb(var(--lp-accent-primary-rgb) / 0.20), rgb(var(--lp-accent-secondary-rgb) / 0.14))',
-                      }}
-                      aria-hidden="true"
-                    />
-                  </div>
-                </motion.div>
-              </FadeIn>
-            ))}
-          </div>
-        </Section>
-
-        <Section id="pricing" className="py-16 sm:py-24" style={{ background: 'var(--lp-bg-2)' }}>
-          <FadeIn>
-            <div className="max-w-2xl">
-              <div className="text-[11px] font-extrabold uppercase tracking-[0.24em]" style={{ color: 'var(--lp-text-muted)' }}>
-                Pricing
-              </div>
-              <h2 className="mt-3 text-3xl font-black tracking-tight sm:text-4xl" style={{ letterSpacing: '-0.03em' }}>
-                Free to start.
-              </h2>
-              <p className="mt-3 max-w-prose text-sm leading-relaxed sm:text-base" style={{ color: 'var(--lp-text-secondary)' }}>
-                Simple and honest. You can iterate later when you add teams.
-              </p>
-            </div>
-          </FadeIn>
-
-          <div className="mt-10 grid gap-4 md:grid-cols-3">
-            {[
-              {
-                title: 'Starter', price: 'Free', cta: 'Start', highlight: true,
-                desc: 'Everything you need to write and organize.',
-                features: ['Unlimited notes', 'Color themes', 'PDF / MD / TXT export', 'Share links', 'Folders & search'],
-              },
-              {
-                title: 'Plus', price: 'Soon', cta: 'Notify me', highlight: false,
-                desc: 'For power users who want more.',
-                features: ['Everything in Starter', 'Offline mode', 'Priority support', 'Advanced export options', 'Custom themes'],
-              },
-              {
-                title: 'Teams', price: 'Later', cta: 'Talk to us', highlight: false,
-                desc: 'Collaboration for your whole team.',
-                features: ['Everything in Plus', 'Team workspaces', 'Admin controls', 'Shared folders', 'Usage analytics'],
-              },
-            ].map((p) => (
-              <FadeIn key={p.title}>
-                <div
-                  className="relative rounded-[22px] border p-6 flex flex-col"
-                  style={{
-                    borderColor: p.highlight ? 'rgb(var(--lp-accent-primary-rgb) / 0.30)' : 'var(--lp-border)',
-                    background: 'var(--lp-surface-strong)',
-                    boxShadow: p.highlight ? 'var(--lp-shadow-strong)' : 'var(--lp-shadow)',
-                  }}
-                >
-                  {p.highlight && (
-                    <span
-                      className="absolute -top-3 right-5 inline-flex items-center rounded-full px-3 py-1 text-[11px] font-extrabold"
-                      style={{
-                        background: 'linear-gradient(135deg, var(--lp-accent-primary), var(--lp-accent-secondary))',
-                        color: 'white',
-                      }}
-                    >
-                      Popular
-                    </span>
-                  )}
-                  <div className="text-xs font-black" style={{ color: 'var(--lp-text-muted)' }}>
-                    {p.title}
-                  </div>
-                  <div className="mt-3 text-2xl font-black tracking-tight" style={{ letterSpacing: '-0.02em' }}>
-                    {p.price}
-                  </div>
-                  <div className="mt-2 text-sm font-bold" style={{ color: 'var(--lp-text-secondary)' }}>
-                    {p.desc}
-                  </div>
-                  <ul className="mt-5 grid gap-2.5" style={{ listStyle: 'none', padding: 0 }}>
-                    {p.features.map((f) => (
-                      <li key={f} className="flex items-center gap-2.5 text-sm" style={{ color: 'var(--lp-text-secondary)' }}>
-                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
-                          <circle cx="8" cy="8" r="7" stroke="rgb(var(--lp-accent-primary-rgb) / 0.40)" strokeWidth="1.5" />
-                          <path d="M5.5 8l2 2 3.5-3.5" stroke="var(--lp-accent-primary)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
-                        <span className="font-semibold">{f}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  <div className="mt-6 mt-auto pt-2">
-                    <a
-                      href={p.title === 'Starter' ? '/signup' : '#contact'}
-                      className="inline-flex h-11 w-full items-center justify-center rounded-[16px] px-5 text-sm font-extrabold transition-transform hover:-translate-y-0.5"
-                      style={{
-                        background: p.highlight ? 'linear-gradient(135deg, var(--lp-accent-primary), var(--lp-accent-secondary))' : 'var(--lp-surface)',
-                        color: p.highlight ? 'white' : 'var(--lp-text)',
-                        border: p.highlight ? 'none' : '1px solid var(--lp-border)',
-                      }}
-                    >
-                      {p.cta}
-                    </a>
+                  <div className="mt-8">
+                    <Link to="/signup">
+                      <button 
+                        className="inline-flex items-center gap-2 rounded-full px-8 py-4 text-base font-semibold transition-transform hover:scale-105"
+                        style={{ background: 'white', color: 'var(--lp-accent-primary)' }}
+                      >
+                        Get started free
+                        {icons.arrowRight}
+                      </button>
+                    </Link>
                   </div>
                 </div>
-              </FadeIn>
-            ))}
-          </div>
-        </Section>
-
-        <Section id="contact" className="py-16 sm:py-24" style={{ background: 'var(--lp-bg-1)' }}>
-          <FadeIn>
-            <div className="grid gap-8 lg:grid-cols-2 lg:items-start">
-              <div>
-                <div className="text-[11px] font-extrabold uppercase tracking-[0.24em]" style={{ color: 'var(--lp-text-muted)' }}>
-                  Contact
-                </div>
-                <h2 className="mt-3 text-3xl font-black tracking-tight sm:text-4xl" style={{ letterSpacing: '-0.03em' }}>
-                  Want something customized?
-                </h2>
-                <p className="mt-3 max-w-prose text-sm leading-relaxed sm:text-base" style={{ color: 'var(--lp-text-secondary)' }}>
-                  Tell us what you need Memora to become. We’ll prioritize the roadmap.
-                </p>
+                
+                {/* Decorative circles */}
+                <div className="pointer-events-none absolute top-0 right-0 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
+                <div className="pointer-events-none absolute bottom-0 left-0 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
               </div>
-
-              <div
-                className="rounded-[22px] border p-6"
-                style={{ borderColor: 'var(--lp-border)', background: 'var(--lp-surface-strong)', boxShadow: 'var(--lp-shadow)' }}
-              >
-                <form className="grid gap-3" onSubmit={handleSubmit}>
-                  <label className="grid gap-2 text-sm font-bold" style={{ color: 'var(--lp-text-secondary)' }}>
-                    Email
-                    <input
-                      required
-                      type="email"
-                      name="email"
-                      value={formState.email}
-                      onChange={(e) => setFormState(s => ({ ...s, email: e.target.value }))}
-                      placeholder="you@domain.com"
-                      className="h-11 rounded-[14px] border px-4"
-                      style={{ borderColor: 'var(--lp-border)', background: 'rgb(255 255 255 / 0.70)', color: 'var(--lp-text)' }}
-                    />
-                  </label>
-                  <label className="grid gap-2 text-sm font-bold" style={{ color: 'var(--lp-text-secondary)' }}>
-                    What do you need?
-                    <textarea
-                      required
-                      name="message"
-                      value={formState.message}
-                      onChange={(e) => setFormState(s => ({ ...s, message: e.target.value }))}
-                      rows={4}
-                      placeholder="Tell us what you want to build."
-                      className="rounded-[14px] border p-4"
-                      style={{ borderColor: 'var(--lp-border)', background: 'rgb(255 255 255 / 0.70)', color: 'var(--lp-text)' }}
-                    />
-                  </label>
-                  <button
-                    type="submit"
-                    disabled={status === 'loading' || status === 'success'}
-                    className="mt-2 inline-flex h-11 items-center justify-center rounded-[16px] px-5 text-sm font-extrabold transition-all"
-                    style={{
-                      background: status === 'success' ? '#10B981' : 'rgba(11, 18, 32, 0.92)',
-                      color: 'white',
-                      opacity: status === 'loading' ? 0.7 : 1
-                    }}
-                  >
-                    {status === 'loading' ? 'Sending...' : status === 'success' ? 'Sent!' : 'Send'}
-                  </button>
-                  {status === 'error' && (
-                    <div className="text-xs font-bold text-red-500 mt-2">
-                      Something went wrong. Please try again.
-                    </div>
-                  )}
-                  {status === 'success' && (
-                    <div className="text-xs font-bold text-green-600 mt-2">
-                      Thanks! We've received your message.
-                    </div>
-                  )}
-                </form>
-              </div>
-            </div>
-          </FadeIn>
-        </Section>
-
-        <Section className="py-16 sm:py-24" style={{ background: 'var(--lp-bg-2)' }}>
-          <FadeIn>
-            <div
-              className="rounded-[28px] border px-6 py-10 sm:px-10"
-              style={{
-                borderColor: 'var(--lp-border)',
-                background:
-                  'radial-gradient(980px 560px at 16% 12%, rgb(var(--lp-accent-primary-rgb) / 0.18), transparent 62%), radial-gradient(880px 560px at 86% 22%, rgb(var(--lp-accent-secondary-rgb) / 0.14), transparent 62%), radial-gradient(820px 540px at 62% 92%, rgb(var(--lp-accent-tertiary-rgb) / 0.10), transparent 66%), var(--lp-surface-tint)',
-                boxShadow: 'var(--lp-shadow-strong)',
-              }}
-            >
-              <div className="grid items-center gap-6 lg:grid-cols-[1fr_auto]">
-                <div>
-                  <h2 className="text-3xl font-black tracking-tight sm:text-4xl" style={{ letterSpacing: '-0.03em' }}>
-                    Start writing with less friction.
-                  </h2>
-                  <p className="mt-3 max-w-prose text-sm leading-relaxed sm:text-base" style={{ color: 'var(--lp-text-secondary)' }}>
-                    Get a focused workspace in minutes — and keep it beautiful in light or dark mode.
-                  </p>
-                </div>
-                <Link
-                  to="/signup"
-                  className="inline-flex h-12 items-center justify-center rounded-[16px] px-6 text-sm font-extrabold"
-                  style={{
-                    background: 'linear-gradient(135deg, var(--lp-accent-primary), var(--lp-accent-secondary))',
-                    color: 'white',
-                    boxShadow: '0 24px 90px rgb(var(--lp-accent-primary-rgb) / 0.24)',
-                  }}
-                >
-                  Get started free
-                </Link>
-              </div>
-            </div>
-          </FadeIn>
-        </Section>
+            </FadeIn>
+          </Container>
+        </section>
       </main>
 
-      <footer className="border-t" style={{ borderTopColor: 'var(--lp-border)' }}>
-        <Container className="grid gap-8 py-12 sm:grid-cols-[1fr_auto_1fr] sm:items-center">
-          <div>
-            <div className="BrandMark is-logo" style={{ width: 160, height: 36 }}>
-              <img className="BrandLogo" src="/logo-memora.png" alt="Memora" />
+      {/* --- Footer --- */}
+      <footer className="py-16" style={{ background: 'var(--lp-bg-2)' }}>
+        <Container>
+          <div className="flex flex-col items-center text-center">
+            {/* Logo */}
+            <Link to="/" className="mb-6">
+              <img src="/logo-memora.png" alt="Memora" className="h-10 w-auto" />
+            </Link>
+            
+            {/* Tagline */}
+            <p className="mb-8 max-w-md text-sm" style={{ color: 'var(--lp-text-secondary)' }}>
+              The quiet space for your ideas. Write freely, organize effortlessly.
+            </p>
+            
+            {/* Navigation */}
+            <nav className="flex flex-wrap items-center justify-center gap-6 mb-8 text-sm">
+              <a href="#features" className="transition-colors hover:text-[var(--lp-accent-primary)]" style={{ color: 'var(--lp-text-secondary)' }}>Features</a>
+              <a href="#faq" className="transition-colors hover:text-[var(--lp-accent-primary)]" style={{ color: 'var(--lp-text-secondary)' }}>FAQ</a>
+              <a href="#testimonials" className="transition-colors hover:text-[var(--lp-accent-primary)]" style={{ color: 'var(--lp-text-secondary)' }}>Reviews</a>
+              <Link to="/app" className="transition-colors hover:text-[var(--lp-accent-primary)]" style={{ color: 'var(--lp-text-secondary)' }}>Open App</Link>
+            </nav>
+            
+            {/* Divider */}
+            <div className="w-full max-w-xs h-px mb-8" style={{ background: 'var(--lp-border)' }} />
+            
+            {/* Bottom row */}
+            <div className="flex flex-col sm:flex-row items-center justify-between w-full max-w-2xl gap-4 text-xs" style={{ color: 'var(--lp-text-muted)' }}>
+              <p>© {new Date().getFullYear()} Memora. All rights reserved.</p>
+              <div className="flex items-center gap-6">
+                <a href="#" className="transition-colors hover:text-[var(--lp-text)]">Privacy</a>
+                <a href="#" className="transition-colors hover:text-[var(--lp-text)]">Terms</a>
+              </div>
             </div>
-            <div className="mt-2 text-xs font-semibold" style={{ color: 'var(--lp-text-muted)' }}>
-              Your knowledge, beautifully organized.
-            </div>
-          </div>
-
-          <div className="flex items-center gap-4">
-            <a href="https://twitter.com" target="_blank" rel="noreferrer" aria-label="Twitter" style={{ color: 'var(--lp-text-muted)' }} className="transition-colors hover:opacity-80">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg>
-            </a>
-            <a href="https://github.com" target="_blank" rel="noreferrer" aria-label="GitHub" style={{ color: 'var(--lp-text-muted)' }} className="transition-colors hover:opacity-80">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" /></svg>
-            </a>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-5 text-sm font-bold sm:justify-self-end" style={{ color: 'var(--lp-text-secondary)' }}>
-            <a href="/privacy" className="transition-colors hover:opacity-80">Privacy</a>
-            <a href="/terms" className="transition-colors hover:opacity-80">Terms</a>
-            <span className="text-xs font-semibold" style={{ color: 'var(--lp-text-muted)' }}>© {new Date().getFullYear()} Memora</span>
           </div>
         </Container>
       </footer>
